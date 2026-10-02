@@ -16,8 +16,9 @@ body {
   -webkit-touch-callout: none;
 }
 
+/* o canvas já vem na resolução da tela (até 2×): sem image-rendering forçado */
 #game canvas {
-  image-rendering: pixelated;
+  display: block;
 }
 
 #rotate {
@@ -52,4 +53,12 @@ body {
   #rotate {
     display: flex;
   }
+}
+
+/* sonda invisível: o viewport.ts lê os insets de notch/cantos pelo padding computado */
+#safe-area {
+  position: fixed;
+  visibility: hidden;
+  pointer-events: none;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }

@@ -3,6 +3,8 @@ import { COLORS } from '../config.ts';
 import { BOOKS, pagesToCollect } from '../data/books.ts';
 import { audio, music, sfx } from '../systems/audio.ts';
 import { save } from '../systems/save.ts';
+import { applyView, onViewChanged, view } from '../systems/viewport.ts';
+import { isIosBrowser, requestFullscreen } from '../systems/fullscreen.ts';
 import { backdrop, button, cover, text, type Button } from '../ui.ts';
 
 const PER_PAGE = 3;
@@ -27,7 +29,10 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create() {
-    const { width, height } = this.scale;
+    const { width, height } = view;
+    applyView(this.cameras.main, true);
+    // nova proporção de tela: remonta o menu mantendo o livro selecionado
+    onViewChanged(this, () => this.scene.restart({ bookId: BOOKS[this.bookIndex(this.selected)]?.id }));
     music.stop();
     backdrop(this, 0x1d1530, 0x4a3a6b);
     this.stars();
@@ -43,11 +48,12 @@ export class MenuScene extends Phaser.Scene {
     this.add.rectangle(width / 2, height - 1, width, 2, 0x5fb04a).setDepth(1);
 
     const mute = this.add
-      .image(width - 14, 14, 'ui', audio.muted ? 5 : 4)
+      .image(width - view.safe.right - 14, 14 + view.safe.top, 'ui', audio.muted ? 5 : 4)
       .setScale(0.6)
       .setInteractive({ useHandCursor: true });
     mute.on('pointerup', () => mute.setFrame(audio.toggleMute() ? 5 : 4));
 
+    if (isIosBrowser() && !save.fullscreenHintSeen) this.iosHint();
 
     const kb = this.input.keyboard!;
     kb.on('keydown-LEFT', () => this.move(-1));
@@ -61,9 +67,27 @@ export class MenuScene extends Phaser.Scene {
   private stars() {
     const rnd = new Phaser.Math.RandomDataGenerator(['readerun']);
     for (let i = 0; i < 40; i++) {
-      const s = this.add.rectangle(rnd.between(0, 480), rnd.between(0, 200), 1, 1, 0xffffff, rnd.realInRange(0.2, 0.7));
+      const s = this.add.rectangle(rnd.between(0, Math.round(view.width)), rnd.between(0, 200), 1, 1, 0xffffff, rnd.realInRange(0.2, 0.7));
       this.tweens.add({ targets: s, alpha: 0.1, duration: rnd.between(800, 2000), yoyo: true, repeat: -1 });
     }
+  }
+
+  /** Safari no iPhone não tem tela cheia para páginas: ensina o atalho da Tela de Início. */
+  private iosHint() {
+    const { width, height, safe } = view;
+    // uma linha só, para não cobrir os botões "Ver livro"; toque fecha de vez
+    const msg = text(this, width / 2, 0, 'Tela cheia: Compartilhar > Adicionar à Tela de Início  [x]', {
+      color: COLORS.gold,
+    }).setOrigin(0.5, 0);
+    const boxH = msg.height + 8;
+    const top = height - safe.bottom - boxH - 2;
+    msg.setY(Math.round(top + 5));
+    const box = this.add.rectangle(width / 2, top + boxH / 2, msg.width + 14, boxH, 0x120c22, 0.92);
+    const hint = this.add.container(0, 0, [box, msg]).setDepth(20);
+    box.setInteractive({ useHandCursor: true }).on('pointerup', () => {
+      save.fullscreenHintSeen = true;
+      hint.destroy();
+    });
   }
 
   private bookIndex(slot: number) {
@@ -77,7 +101,7 @@ export class MenuScene extends Phaser.Scene {
   private buildShelf() {
     this.cards.forEach((c) => c.destroy());
     this.cards = [];
-    const { width } = this.scale;
+    const { width } = view;
     const slots = BOOKS.slice(this.shelf * PER_PAGE, (this.shelf + 1) * PER_PAGE);
     const spacing = 140;
     const x0 = width / 2 - ((slots.length - 1) * spacing) / 2;
@@ -105,8 +129,8 @@ export class MenuScene extends Phaser.Scene {
     });
 
     if (this.shelfCount() > 1) {
-      const prev = button(this, 18, 108, '<', () => this.turnShelf(-1), { width: 20 });
-      const next = button(this, width - 18, 108, '>', () => this.turnShelf(1), { width: 20 });
+      const prev = button(this, view.safe.left + 18, 108, '<', () => this.turnShelf(-1), { width: 20 });
+      const next = button(this, width - view.safe.right - 18, 108, '>', () => this.turnShelf(1), { width: 20 });
       this.cards.push(prev, next);
     }
 
@@ -151,6 +175,7 @@ export class MenuScene extends Phaser.Scene {
     const book = BOOKS[index];
     if (!book) return;
     sfx.click();
+    requestFullscreen();
     this.scene.start('Game', { bookId: book.id });
   }
 }

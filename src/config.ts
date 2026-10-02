@@ -1,5 +1,13 @@
+/**
+ * Área lógica: a altura é sempre 270 e a largura varia de WIDTH (16:9) a
+ * MAX_WIDTH (21:9), para preencher telas largas mostrando mais cenário.
+ * Fora dessa faixa sobram faixas (letterbox). Ver src/systems/viewport.ts.
+ */
 export const WIDTH = 480;
+export const MAX_WIDTH = 630;
 export const HEIGHT = 270;
+/** Teto da densidade de pixels do canvas: nítido o bastante e leve em celulares 3×. */
+export const MAX_DPR = 2;
 export const TILE = 16;
 
 export const FONT = '"Press Start 2P", monospace';
