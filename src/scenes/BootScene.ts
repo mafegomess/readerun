@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BOOKS } from '../data/books.ts';
+import { FOX_FRAMES } from '../data/foxFrames.ts';
 import { COLORS } from '../config.ts';
 import { applyView, view } from '../systems/viewport.ts';
 import { text } from '../ui.ts';
@@ -38,11 +39,15 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
-    this.anims.create({ key: 'fox-idle', frames: this.anims.generateFrameNumbers('fox', { frames: [0, 0, 1, 1] }), frameRate: 3, repeat: -1 });
-    this.anims.create({ key: 'fox-run', frames: this.anims.generateFrameNumbers('fox', { start: 2, end: 5 }), frameRate: 12, repeat: -1 });
-    this.anims.create({ key: 'fox-jump', frames: [{ key: 'fox', frame: 6 }] });
-    this.anims.create({ key: 'fox-fall', frames: [{ key: 'fox', frame: 7 }] });
-    this.anims.create({ key: 'fox-hurt', frames: [{ key: 'fox', frame: 8 }] });
+    // quadros e ritmos: specs/003-plataforma-estavel-e-nova-raposa/contracts/fox-animations.md
+    const fox = (key: string, frames: readonly number[], frameRate = 1, repeat = 0) =>
+      this.anims.create({ key, frames: this.anims.generateFrameNumbers('fox', { frames: [...frames] }), frameRate, repeat });
+    fox('fox-idle', FOX_FRAMES.idle, 20, -1);
+    fox('fox-run', FOX_FRAMES.run, 14, -1);
+    fox('fox-jump', FOX_FRAMES.jump);
+    fox('fox-fall', FOX_FRAMES.fall);
+    fox('fox-land', FOX_FRAMES.land, 15);
+    fox('fox-hurt', FOX_FRAMES.hurt);
     this.scene.start('Menu');
   }
 }

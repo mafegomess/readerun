@@ -3,7 +3,7 @@
 **Feature**: `001-mvp-raposa-leitora` | **Data**: 2026-10-02 | **Spec**: [spec.md](./spec.md)
 **Status**: Implementado (registro da arquitetura atual)
 
-> **Emenda (002)**: a apresentação foi trocada pela da [002 – Texto nítido e tela maior no celular](../002-texto-nitido-tela-mobile/plan.md). O canvas agora usa a resolução real (`Scale.NONE`, DPR até 2), as câmeras usam zoom e a área lógica tem altura de 270 com largura de 480 a 630 (`src/systems/viewport.ts`). O tileset é extrudado (margem 1, espaçamento 2). As linhas abaixo sobre `main.ts` (FIT 480×270) e o tileset 7×2 sem margem descrevem o MVP original.
+> **Emenda (002)**: a apresentação foi trocada pela da [002 – Texto nítido e tela maior no celular](../002-texto-nitido-tela-mobile/plan.md). O canvas agora usa a resolução real (`Scale.NONE`, DPR até 2), as câmeras usam zoom e a área lógica tem altura de 270 com largura de 480 a 630 (`src/systems/viewport.ts`). O tileset é extrudado (margem 1, espaçamento 2). A [003](../003-plataforma-estavel-e-nova-raposa/plan.md) passou a carona das plataformas para cada passo de física (evento `worldstep`, com a raposa encostada no topo) e trocou a raposa por uma folha de 27 quadros (`src/data/foxFrames.ts`). As linhas abaixo sobre `main.ts` (FIT 480×270) e o tileset 7×2 sem margem descrevem o MVP original.
 
 ## Resumo
 
