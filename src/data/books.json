@@ -1,0 +1,53 @@
+[
+  {
+    "id": "dom-casmurro",
+    "title": "Dom Casmurro",
+    "author": "Machado de Assis",
+    "year": 1899,
+    "bookPages": 256,
+    "map": "dom-casmurro",
+    "synopsis": "Bentinho, já velho e solitário, revisita a juventude e o amor por Capitu, a menina de \"olhos de ressaca\". Ao narrar a própria história, ele tenta provar uma traição que talvez só exista na cabeça dele. Um clássico que convida o leitor a desconfiar do narrador.",
+    "theme": {
+      "skyTop": "#2b2350",
+      "skyBottom": "#d9826b",
+      "hillsFar": "#4a3a6b",
+      "hillsNear": "#35295a",
+      "cover": "#6b2f3a",
+      "coverAccent": "#e8c170"
+    }
+  },
+  {
+    "id": "alice",
+    "title": "Alice no País das Maravilhas",
+    "author": "Lewis Carroll",
+    "year": 1865,
+    "bookPages": 160,
+    "map": "alice",
+    "synopsis": "Alice segue um coelho apressado toca abaixo e cai num mundo onde a lógica vira de cabeça para baixo: ela encolhe, cresce, toma chá com o Chapeleiro Maluco e enfrenta a temperamental Rainha de Copas. Uma aventura cheia de jogos de palavras que encanta leitores de todas as idades.",
+    "theme": {
+      "skyTop": "#7fc8f8",
+      "skyBottom": "#ffd6e8",
+      "hillsFar": "#9ad18b",
+      "hillsNear": "#6cb36a",
+      "cover": "#2f5f8a",
+      "coverAccent": "#ffb3c8"
+    }
+  },
+  {
+    "id": "o-alienista",
+    "title": "O Alienista",
+    "author": "Machado de Assis",
+    "year": 1882,
+    "bookPages": 96,
+    "map": "o-alienista",
+    "synopsis": "O médico Simão Bacamarte funda a Casa Verde, um hospício na pequena Itaguaí, e começa a internar quem considera louco, até que quase toda a vila está lá dentro. Uma sátira curta e afiada sobre ciência, poder e os limites entre razão e loucura.",
+    "theme": {
+      "skyTop": "#3d6b5a",
+      "skyBottom": "#c9e4b4",
+      "hillsFar": "#5f8f63",
+      "hillsNear": "#3f6e4c",
+      "cover": "#2e5b3f",
+      "coverAccent": "#f2e6c4"
+    }
+  }
+]
