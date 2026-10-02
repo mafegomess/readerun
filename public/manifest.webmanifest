@@ -1,0 +1,15 @@
+{
+  "name": "Readerun",
+  "short_name": "Readerun",
+  "description": "Ajude a raposa a recuperar as páginas perdidas e descubra um livro novo a cada fase.",
+  "lang": "pt-BR",
+  "start_url": ".",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#1d1530",
+  "theme_color": "#1d1530",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

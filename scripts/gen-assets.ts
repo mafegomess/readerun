@@ -312,7 +312,10 @@ function genFox() {
   save('fox.png', sheet(frames));
 }
 
-// ---------- tileset (16x16, 7 colunas x 2 linhas) ----------
+// ---------- tileset (16x16, 7 colunas x 2 linhas, margem 1 e espaçamento 2) ----------
+
+const TILE_MARGIN = 1;
+const TILE_SPACING = 2;
 // linha 0: grama meio, grama esq, grama dir, grama única, plataforma esq, plataforma meio, plataforma dir
 // linha 1: terra meio, terra esq, terra dir, terra única, arbusto, flores, tufo
 
@@ -415,8 +418,22 @@ function genTiles() {
     decorTile('flowers'),
     decorTile('tuft'),
   ];
-  const out = new Img(16 * 7, 32);
-  tiles.forEach((t, i) => out.blit(t, (i % 7) * 16, Math.floor(i / 7) * 16));
+  // tiles extrudados (margem 1, espaçamento 2, bordas duplicadas): com zoom de câmera
+  // fracionário, a borda de um tile não amostra o vizinho e não aparecem linhas no chão
+  const step = 16 + TILE_SPACING;
+  const out = new Img(TILE_MARGIN * 2 + 7 * 16 + 6 * TILE_SPACING, TILE_MARGIN * 2 + 2 * 16 + TILE_SPACING);
+  tiles.forEach((t, i) => {
+    const ox = TILE_MARGIN + (i % 7) * step;
+    const oy = TILE_MARGIN + Math.floor(i / 7) * step;
+    for (let y = -1; y <= 16; y++)
+      for (let x = -1; x <= 16; x++) {
+        const sx = Math.min(15, Math.max(0, x));
+        const sy = Math.min(15, Math.max(0, y));
+        const k = (sy * 16 + sx) * 4;
+        const c: RGBA = [t.data[k], t.data[k + 1], t.data[k + 2], t.data[k + 3]];
+        if (c[3]) out.set(ox + x, oy + y, c);
+      }
+  });
   save('tiles.png', out);
 }
 
@@ -445,6 +462,7 @@ function genPage() {
   for (const y of [6, 8, 10, 12]) t.line(5, y, 11, y - 0.5, INK);
   t.outline(OUTLINE);
   save('page.png', t);
+  return t;
 }
 
 function genSpike() {
@@ -655,10 +673,35 @@ function genSpark() {
   save('spark.png', t);
 }
 
+// ---------- ícones do app (Tela de Início / manifest) ----------
+
+function scaledBlit(dst: Img, src: Img, dx: number, dy: number, scale: number) {
+  for (let y = 0; y < src.h * scale; y++)
+    for (let x = 0; x < src.w * scale; x++) {
+      const k = (Math.floor(y / scale) * src.w + Math.floor(x / scale)) * 4;
+      if (src.data[k + 3]) dst.set(dx + x, dy + y, [src.data[k], src.data[k + 1], src.data[k + 2], src.data[k + 3]]);
+    }
+}
+
+function genIcons(page: Img) {
+  const foxImg = fox({ bob: 0, legs: STAND, tail: 0 });
+  for (const size of [180, 192, 512]) {
+    const icon = new Img(size, size);
+    icon.rect(0, 0, size, size, hex('#1d1530'));
+    // raposa ampliada em escala inteira, com uma página flutuando acima
+    const scale = Math.floor((size * 0.85) / 32);
+    const fw = 32 * scale;
+    scaledBlit(icon, foxImg, Math.round((size - fw) / 2), Math.round(size * 0.97 - fw), scale);
+    const ps = Math.max(1, Math.floor(scale / 2));
+    scaledBlit(icon, page, Math.round(size * 0.1), Math.round(size * 0.1), ps);
+    save(`icon-${size}.png`, icon);
+  }
+}
+
 console.log('Gerando assets em public/assets:');
 genFox();
 genTiles();
-genPage();
+const page = genPage();
 genSpike();
 genPlatform();
 genCheckpoint();
@@ -666,3 +709,4 @@ genExit();
 genHeart();
 genUi();
 genSpark();
+genIcons(page);

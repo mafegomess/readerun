@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
-import { HEIGHT, LIVES, WIDTH } from '../config.ts';
+import { HEIGHT, LIVES, MAX_WIDTH, WIDTH } from '../config.ts';
 import { BOOKS, getBook, hexColor, pagesToCollect, type Book } from '../data/books.ts';
 import { music, sfx } from '../systems/audio.ts';
 import { touch } from '../systems/controls.ts';
 import { Fox } from '../systems/Fox.ts';
 import { save } from '../systems/save.ts';
+import { applyView, onViewChanged, screenOrigin } from '../systems/viewport.ts';
 
 type TiledObject = Phaser.Types.Tilemaps.TiledObject & { class?: string };
 
@@ -12,7 +13,14 @@ type Mover = Phaser.Types.Physics.Arcade.ImageWithDynamicBody & {
   path: { sx: number; sy: number; dx: number; dy: number; len: number; speed: number; dir: number };
 };
 
-export type HudData = { book: Book; total: number; lives: number };
+export type HudData = {
+  book: Book;
+  total: number;
+  lives: number;
+  collected: number;
+  /** ao remontar a HUD (tela redimensionada), reabre o painel que estava aberto */
+  state?: 'playing' | 'paused' | 'over';
+};
 
 export class GameScene extends Phaser.Scene {
   private book!: Book;
@@ -29,8 +37,12 @@ export class GameScene extends Phaser.Scene {
   private exitOpen = false;
   private lockedToastAt = 0;
   private sparks!: Phaser.GameObjects.Particles.ParticleEmitter;
-  private bg: { far: Phaser.GameObjects.TileSprite; near: Phaser.GameObjects.TileSprite; clouds: Phaser.GameObjects.TileSprite } | null =
-    null;
+  private bg: {
+    sky: Phaser.GameObjects.Image;
+    far: Phaser.GameObjects.TileSprite;
+    near: Phaser.GameObjects.TileSprite;
+    clouds: Phaser.GameObjects.TileSprite;
+  } | null = null;
   private mapHeight = 0;
 
   constructor() {
@@ -156,13 +168,19 @@ export class GameScene extends Phaser.Scene {
     this.sparks.setDepth(20);
 
     const cam = this.cameras.main;
+    applyView(cam);
+    // tela redimensionada/girada: só reajusta câmera e fundo, a tentativa continua
+    onViewChanged(this, () => {
+      applyView(cam);
+      this.layoutBackground();
+    });
     cam.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     cam.startFollow(this.fox, true, 0.12, 0.12);
     cam.setDeadzone(40, 60);
     cam.fadeIn(300);
 
     music.play([0, 5, -3, 2, 7][BOOKS.indexOf(this.book) % 5]);
-    this.scene.launch('Hud', { book: this.book, total: this.total, lives: this.lives } satisfies HudData);
+    this.scene.launch('Hud', this.hudSnapshot());
     if (!this.sys.game.device.input.touch) {
       this.time.delayedCall(500, () => this.events.emit('hud:toast', 'SETAS mover   ESPAÇO pular   P pausar'));
     }
@@ -190,6 +208,11 @@ export class GameScene extends Phaser.Scene {
       this.bg.near.tilePositionX = sx * 0.35;
       this.bg.clouds.tilePositionX = sx * 0.05 + this.time.now * 0.004;
     }
+  }
+
+  /** Estado atual para (re)montar a HUD. */
+  hudSnapshot(): HudData {
+    return { book: this.book, total: this.total, lives: this.lives, collected: this.collected };
   }
 
   /** HUD chama ao retomar a pausa, para um toque antigo não virar pulo. */
@@ -338,11 +361,24 @@ export class GameScene extends Phaser.Scene {
       g.generateTexture(key('clouds'), WIDTH, 120);
       g.destroy();
     }
-    this.add.image(0, 0, key('sky')).setOrigin(0).setScrollFactor(0).setDepth(-10);
     this.bg = {
-      clouds: this.add.tileSprite(0, 0, WIDTH, 120, key('clouds')).setOrigin(0).setScrollFactor(0).setDepth(-9),
-      far: this.add.tileSprite(0, 0, WIDTH, HEIGHT, key('far')).setOrigin(0).setScrollFactor(0).setDepth(-8),
-      near: this.add.tileSprite(0, 0, WIDTH, HEIGHT, key('near')).setOrigin(0).setScrollFactor(0).setDepth(-7),
+      sky: this.add.image(0, 0, key('sky')).setOrigin(0).setScrollFactor(0).setDepth(-10),
+      clouds: this.add.tileSprite(0, 0, MAX_WIDTH, 120, key('clouds')).setOrigin(0).setScrollFactor(0).setDepth(-9),
+      far: this.add.tileSprite(0, 0, MAX_WIDTH, HEIGHT, key('far')).setOrigin(0).setScrollFactor(0).setDepth(-8),
+      near: this.add.tileSprite(0, 0, MAX_WIDTH, HEIGHT, key('near')).setOrigin(0).setScrollFactor(0).setDepth(-7),
     };
+    this.layoutBackground();
+  }
+
+  /**
+   * O fundo já nasce com a largura máxima (o que sobra fica fora da tela); aqui só
+   * é reposicionado. Objetos com scrollFactor 0 são escalados em torno do centro
+   * da câmera, por isso o deslocamento de screenOrigin().
+   */
+  private layoutBackground() {
+    if (!this.bg) return;
+    const o = screenOrigin();
+    this.bg.sky.setPosition(o.x, o.y).setDisplaySize(MAX_WIDTH, HEIGHT);
+    for (const t of [this.bg.clouds, this.bg.far, this.bg.near]) t.setPosition(o.x, o.y);
   }
 }

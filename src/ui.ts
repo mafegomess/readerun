@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COLORS, FONT } from './config.ts';
 import { hexColor, type Book } from './data/books.ts';
 import { sfx } from './systems/audio.ts';
+import { view } from './systems/viewport.ts';
 
 type TextOpts = { size?: number; color?: string; wrap?: number; align?: 'left' | 'center' | 'right'; lineSpacing?: number };
 
@@ -13,6 +14,8 @@ export function text(scene: Phaser.Scene, x: number, y: number, str: string, opt
     align: opts.align ?? 'left',
     lineSpacing: opts.lineSpacing ?? 4,
     wordWrap: opts.wrap ? { width: opts.wrap, useAdvancedWrap: false } : undefined,
+    // rasteriza no tamanho final da tela (zoom da câmera), sem borrão
+    resolution: view.zoom,
   });
   return t;
 }
@@ -104,6 +107,6 @@ export function cover(scene: Phaser.Scene, x: number, y: number, w: number, h: n
 export function backdrop(scene: Phaser.Scene, top: number, bottom: number) {
   const g = scene.add.graphics();
   g.fillGradientStyle(top, top, bottom, bottom, 1);
-  g.fillRect(0, 0, scene.scale.width, scene.scale.height);
+  g.fillRect(0, 0, view.width, view.height);
   return g;
 }

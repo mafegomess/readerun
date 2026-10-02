@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BOOKS } from '../data/books.ts';
 import { COLORS } from '../config.ts';
+import { applyView, view } from '../systems/viewport.ts';
 import { text } from '../ui.ts';
 
 export class BootScene extends Phaser.Scene {
@@ -9,7 +10,8 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload() {
-    const { width, height } = this.scale;
+    const { width, height } = view;
+    applyView(this.cameras.main, true);
     const bar = this.add.graphics();
     const label = text(this, width / 2, height / 2 - 16, 'Carregando...', { color: COLORS.muted }).setOrigin(0.5);
     this.load.on('progress', (p: number) => {

@@ -14,6 +14,13 @@ npm run build     # confere os mapas, checa tipos e gera dist/
 
 Controles: setas/A-D para andar, espaço/W/Z/↑ para pular (segurar pula mais alto), P/Esc para pausar. No celular aparecem botões na tela (jogue com o aparelho deitado).
 
+### Tela e celular
+
+- O jogo é desenhado na resolução real da tela (até 2× a densidade) e se adapta a qualquer janela. Telas de 16:9 a 21:9 são preenchidas por inteiro, mostrando mais cenário nas laterais; fora dessa faixa sobram faixas nas bordas.
+- **Android (Chrome)**: o jogo entra em tela cheia no primeiro toque e trava na horizontal.
+- **iPhone (Safari)**: o Safari não permite tela cheia para páginas. Use Compartilhar → Adicionar à Tela de Início e abra pelo ícone: o jogo abre em tela cheia (o menu mostra essa dica uma vez).
+- HUD e botões de toque se afastam do notch e dos cantos arredondados.
+
 ## Regras
 
 - 3 vidas por tentativa. Ao perder uma vida, volta ao último marcador (checkpoint) sem perder as páginas já pegas.

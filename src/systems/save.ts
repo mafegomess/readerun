@@ -3,9 +3,11 @@ const KEY = 'readerun:save:v1';
 type SaveData = {
   completed: string[];
   muted: boolean;
+  /** dica "Adicionar à Tela de Início" do iPhone já fechada */
+  fullscreenHintSeen: boolean;
 };
 
-const DEFAULTS: SaveData = { completed: [], muted: false };
+const DEFAULTS: SaveData = { completed: [], muted: false, fullscreenHintSeen: false };
 
 function load(): SaveData {
   try {
@@ -15,6 +17,7 @@ function load(): SaveData {
     return {
       completed: Array.isArray(parsed.completed) ? parsed.completed.filter((x: unknown) => typeof x === 'string') : [],
       muted: parsed.muted === true,
+      fullscreenHintSeen: parsed.fullscreenHintSeen === true,
     };
   } catch {
     return { ...DEFAULTS };
@@ -44,6 +47,13 @@ export const save = {
   },
   set muted(v: boolean) {
     state.muted = v;
+    persist();
+  },
+  get fullscreenHintSeen() {
+    return state.fullscreenHintSeen;
+  },
+  set fullscreenHintSeen(v: boolean) {
+    state.fullscreenHintSeen = v;
     persist();
   },
 };

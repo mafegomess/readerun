@@ -7,12 +7,20 @@
     <meta name="description" content="Ajude a raposa a recuperar as páginas perdidas e descubra um livro novo a cada fase." />
     <title>Readerun</title>
     <link rel="icon" href="assets/page.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/icon-180.png" />
+    <!-- abrir pela Tela de Início = tela cheia, inclusive no iPhone -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Readerun" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="game"></div>
+    <div id="safe-area" aria-hidden="true"></div>
     <div id="rotate">
       <img src="assets/page.png" alt="" />
       <p>Gire o celular para jogar</p>
