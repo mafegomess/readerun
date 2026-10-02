@@ -66,6 +66,7 @@
 - [x] T025 Rodar `npm run build` (check-maps + typecheck + vite build)
 - [x] T026 Atravessar o primeiro trecho de uma fase com o teclado para confirmar física e carona inalteradas (quickstart, passo 7; RF-011)
 - [x] T027 Relatar o que foi verificado no navegador e listar os passos 8 a 14 do quickstart como pendentes de teste em aparelho real
+  - Passos 8 a 14 executados pela pessoa usuária no celular (deploy de preview da Vercel): tudo certo.
 
 ## Dependências e ordem
 

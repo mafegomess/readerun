@@ -2,7 +2,7 @@
 
 **Feature**: `002-texto-nitido-tela-mobile`
 **Criada em**: 2026-10-02
-**Status**: Implementado (pendente: teste em aparelho real, quickstart passos 8–14)
+**Status**: Implementado e testado em aparelho real (2026-10-02)
 **Pedido original**: "no desktop, a fonte está meio embaçada, causa dificuldade na leitura. No mobile, a tela de jogo está pequena demais, atrapalha a jogabilidade."
 **Base**: [001 – MVP](../001-mvp-raposa-leitora/spec.md) (emenda a História 5 e o RF-014 no que diz respeito à apresentação)
 
