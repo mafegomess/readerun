@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BOOKS } from '../data/books.ts';
+import { BOOKS, SCENERIES } from '../data/books.ts';
 import { FOX_FRAMES } from '../data/foxFrames.ts';
 import { COLORS } from '../config.ts';
 import { applyView, view } from '../systems/viewport.ts';
@@ -29,10 +29,16 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet('heart', 'heart.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('ui', 'ui.png', { frameWidth: 32, frameHeight: 32 });
     this.load.image('tiles', 'tiles.png');
+    for (const scenery of SCENERIES) this.load.image('tiles-' + scenery, 'tiles-' + scenery + '.png');
+    this.load.image('falling', 'falling.png');
+    this.load.spritesheet('spring', 'spring.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('spiketrap', 'spiketrap.png', { frameWidth: 16, frameHeight: 16 });
     this.load.image('page', 'page.png');
     this.load.image('spike', 'spike.png');
     this.load.image('platform', 'platform.png');
     this.load.image('spark', 'spark.png');
+    this.load.image('logo', 'logo.png');
+    this.load.image('shelf', 'shelf.png');
 
     this.load.setPath('maps/');
     for (const book of BOOKS) this.load.tilemapTiledJSON(`map-${book.id}`, `${book.map}.json`);
@@ -48,6 +54,6 @@ export class BootScene extends Phaser.Scene {
     fox('fox-fall', FOX_FRAMES.fall);
     fox('fox-land', FOX_FRAMES.land, 15);
     fox('fox-hurt', FOX_FRAMES.hurt);
-    this.scene.start('Menu');
+    this.scene.start('Title');
   }
 }

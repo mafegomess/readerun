@@ -1,18 +1,25 @@
 import Phaser from 'phaser';
-import { COLORS, FONT } from './config.ts';
+import { COLORS, FONTS } from './config.ts';
 import { hexColor, type Book } from './data/books.ts';
 import { sfx } from './systems/audio.ts';
+import { save } from './systems/save.ts';
 import { view } from './systems/viewport.ts';
 
 type TextOpts = { size?: number; color?: string; wrap?: number; align?: 'left' | 'center' | 'right'; lineSpacing?: number };
 
+/** Fonte escolhida nas Opções (família e escala de tamanho). */
+export function currentFont() {
+  return FONTS[save.font];
+}
+
 export function text(scene: Phaser.Scene, x: number, y: number, str: string, opts: TextOpts = {}) {
+  const font = currentFont();
   const t = scene.add.text(Math.round(x), Math.round(y), str, {
-    fontFamily: FONT,
-    fontSize: `${opts.size ?? 8}px`,
+    fontFamily: font.family,
+    fontSize: `${Math.round((opts.size ?? 8) * font.scale)}px`,
     color: opts.color ?? COLORS.text,
     align: opts.align ?? 'left',
-    lineSpacing: opts.lineSpacing ?? 4,
+    lineSpacing: Math.round((opts.lineSpacing ?? 4) * font.scale),
     wordWrap: opts.wrap ? { width: opts.wrap, useAdvancedWrap: false } : undefined,
     // rasteriza no tamanho final da tela (zoom da câmera), sem borrão
     resolution: view.zoom,

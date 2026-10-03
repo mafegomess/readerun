@@ -1,9 +1,10 @@
 <!--
 Relatório de sincronização
-- Versão: (nenhuma) → 1.0.0 (ratificada em 2026-10-02)
-- Princípios criados: I a VII
-- Templates alinhados: plan-template.md (tabela de verificação), spec-template.md, tasks-template.md
-- Pendências: nenhuma
+- Versão: 1.0.0 → 1.0.1 (PATCH, 2026-10-02)
+- Princípio alterado: II. A leitura no centro — só o exemplo da regra atual de páginas (máximo de 20 → 50, decidido na spec 004); o princípio não muda
+- Templates: nenhum cita o exemplo; nada a propagar
+- Pendências: nenhuma (README.md e src/data/pageRule.ts atualizados na implementação da spec 004)
+- Histórico: 1.0.0 ratificada em 2026-10-02 (princípios I a VII)
 -->
 
 # Constituição do Readerun
@@ -22,7 +23,7 @@ Relatório de sincronização
 
 - Cada fase DEVE representar um livro.
 - O livro só DEVE ser revelado quando o jogador coletar **todas** as páginas da fase.
-- A quantidade de páginas DEVE ser proporcional ao tamanho do livro real, por uma regra única e centralizada (hoje em `src/data/pageRule.ts`: 1 a cada 20 páginas, entre 5 e 20).
+- A quantidade de páginas DEVE ser proporcional ao tamanho do livro real, por uma regra única e centralizada (hoje em `src/data/pageRule.ts`: 1 a cada 20 páginas, entre 5 e 50).
 - A revelação DEVE mostrar, no mínimo, capa, título, autor e uma sinopse/recomendação curta.
 - Fases ainda não concluídas NÃO DEVEM revelar o título do livro.
 
@@ -88,4 +89,4 @@ Relatório de sincronização
 - Emendas são feitas com `/speckit.constitution`, com versionamento semântico (MAJOR: remove ou redefine princípio; MINOR: adiciona; PATCH: redação).
 - Todo `plan.md` DEVE conter a verificação contra estes princípios.
 
-**Versão**: 1.0.0 | **Ratificada em**: 2026-10-02 | **Última emenda**: 2026-10-02
+**Versão**: 1.0.1 | **Ratificada em**: 2026-10-02 | **Última emenda**: 2026-10-02

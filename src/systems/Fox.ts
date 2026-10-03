@@ -26,7 +26,9 @@ export class Fox extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.body.setSize(14, 20).setOffset(9, 11);
-    this.body.setMaxVelocityY(PHYSICS.maxFall);
+    // o limite do Arcade vale para cima e para baixo: fica no impulso da mola,
+    // e a queda máxima é aplicada à parte pela GameScene a cada passo de física
+    this.body.setMaxVelocityY(PHYSICS.springVelocity);
     this.setDepth(10);
     const K = Phaser.Input.Keyboard.KeyCodes;
     this.keys = scene.input.keyboard!.addKeys({
@@ -52,6 +54,15 @@ export class Fox extends Phaser.Physics.Arcade.Sprite {
     this.wasAnimGround = true;
     this.supported = false;
     this.touchJumpWas = touch.jump;
+  }
+
+  /** Impulso da mola: como um pulo, mas soltar o botão não corta a subida. */
+  bounce(velocity: number) {
+    this.setVelocityY(-velocity);
+    this.jumping = false;
+    this.buffer = 0;
+    this.coyote = 0;
+    this.airTime = 1;
   }
 
   clearInput() {

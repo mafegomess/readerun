@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { COLORS } from '../config.ts';
 import { BOOKS, pagesToCollect } from '../data/books.ts';
-import { audio, music, sfx } from '../systems/audio.ts';
+import { music, sfx } from '../systems/audio.ts';
 import { save } from '../systems/save.ts';
 import { applyView, onViewChanged, view } from '../systems/viewport.ts';
-import { isIosBrowser, requestFullscreen } from '../systems/fullscreen.ts';
+import { requestFullscreen } from '../systems/fullscreen.ts';
 import { backdrop, button, cover, text, type Button } from '../ui.ts';
 
 const PER_PAGE = 3;
@@ -37,8 +37,9 @@ export class MenuScene extends Phaser.Scene {
     backdrop(this, 0x1d1530, 0x4a3a6b);
     this.stars();
 
-    text(this, width / 2, 8, 'READERUN', { size: 16, color: COLORS.gold }).setOrigin(0.5, 0);
-    text(this, width / 2, 29, 'Recupere as páginas e descubra o livro', { color: COLORS.muted }).setOrigin(0.5, 0);
+    // tela "Fases" (spec 004): o logo, o mudo e a dica do iPhone ficam no menu inicial
+    text(this, width / 2, 12, 'Escolha um livro', { size: 16, color: COLORS.gold }).setOrigin(0.5, 0);
+    button(this, view.safe.left + 40, 20, 'Voltar', () => this.back(), { width: 64 });
 
     this.frame = this.add.graphics().setDepth(5);
     this.buildShelf();
@@ -47,15 +48,8 @@ export class MenuScene extends Phaser.Scene {
     this.tweens.add({ targets: runner, x: width + 20, duration: 7000, repeat: -1, repeatDelay: 1500 });
     this.add.rectangle(width / 2, height - 1, width, 2, 0x5fb04a).setDepth(1);
 
-    const mute = this.add
-      .image(width - view.safe.right - 14, 14 + view.safe.top, 'ui', audio.muted ? 5 : 4)
-      .setScale(0.6)
-      .setInteractive({ useHandCursor: true });
-    mute.on('pointerup', () => mute.setFrame(audio.toggleMute() ? 5 : 4));
-
-    if (isIosBrowser() && !save.fullscreenHintSeen) this.iosHint();
-
     const kb = this.input.keyboard!;
+    kb.on('keydown-ESC', () => this.back());
     kb.on('keydown-LEFT', () => this.move(-1));
     kb.on('keydown-RIGHT', () => this.move(1));
     kb.on('keydown-A', () => this.move(-1));
@@ -72,22 +66,9 @@ export class MenuScene extends Phaser.Scene {
     }
   }
 
-  /** Safari no iPhone não tem tela cheia para páginas: ensina o atalho da Tela de Início. */
-  private iosHint() {
-    const { width, height, safe } = view;
-    // uma linha só, para não cobrir os botões "Ver livro"; toque fecha de vez
-    const msg = text(this, width / 2, 0, 'Tela cheia: Compartilhar > Adicionar à Tela de Início  [x]', {
-      color: COLORS.gold,
-    }).setOrigin(0.5, 0);
-    const boxH = msg.height + 8;
-    const top = height - safe.bottom - boxH - 2;
-    msg.setY(Math.round(top + 5));
-    const box = this.add.rectangle(width / 2, top + boxH / 2, msg.width + 14, boxH, 0x120c22, 0.92);
-    const hint = this.add.container(0, 0, [box, msg]).setDepth(20);
-    box.setInteractive({ useHandCursor: true }).on('pointerup', () => {
-      save.fullscreenHintSeen = true;
-      hint.destroy();
-    });
+  private back() {
+    sfx.click();
+    this.scene.start('Title');
   }
 
   private bookIndex(slot: number) {
