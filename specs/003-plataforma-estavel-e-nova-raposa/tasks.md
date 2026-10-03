@@ -65,6 +65,7 @@
 - [x] T017 [P] Atualizar `README.md` (seção Arte e som: a raposa e suas animações vêm de `gen-assets.ts`; layout em `src/data/foxFrames.ts`)
 - [x] T018 Rodar `npm run build` (check-maps + typecheck + vite build)
 - [x] T019 Relatar o que foi medido e verificado, e listar o passo 13 do quickstart (aparelho real de 120 Hz) como teste manual pendente
+  - Passo 13 executado pela pessoa usuária no celular de 120 Hz (deploy de preview da Vercel), depois das correções T020–T023: tudo certo.
 
 ## Dependências e ordem
 

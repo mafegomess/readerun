@@ -2,7 +2,7 @@
 
 **Feature**: `003-plataforma-estavel-e-nova-raposa`
 **Criada em**: 2026-10-02
-**Status**: Implementado (pendente: teste em aparelho real de 120 Hz, quickstart passo 13)
+**Status**: Implementado e testado em aparelho real de 120 Hz (2026-10-02)
 **Pedido original**: "quando a raposa está em cima da plataforma móvel ela começa a dar uma tremidinha, não deveria acontecer. Além disso quero fazer alterações na sprite da raposa, tenho algumas referencias para você"
 **Base**: [001 – MVP](../001-mvp-raposa-leitora/spec.md) (História 1, cenário 3; RF-005) e [002](../002-texto-nitido-tela-mobile/spec.md) (nitidez da arte)
 
