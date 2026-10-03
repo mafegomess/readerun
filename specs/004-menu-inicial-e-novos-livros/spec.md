@@ -2,7 +2,7 @@
 
 **Feature**: `004-menu-inicial-e-novos-livros`
 **Criada em**: 2026-10-02
-**Status**: Implementado (pendente: teste em aparelho real, preview da Vercel)
+**Status**: Implementado e testado em aparelho real (2026-10-03)
 **Pedido original**: "Quero criar um menu inicial que contenha o nome do jogo estilizado de uma forma que combine com o personagem e com o tema. O menu deve ter um botão que permite o jogador fazer alterações básicas de opções, como tirar a fonte pixelada, diminuir ou mutar a musica e os efeitos sonoros. Deve ter um botão com os créditos de criação do jogo. E deve ter um botão para acessar as fases. Nesse novo spec também quero fazer alterações nos livros que estão no jogo, tirar alice e colocar novos."
 **Base**: [001 – MVP](../001-mvp-raposa-leitora/spec.md) (História 4, menu de livros; RF-002 regra de páginas, emendada aqui; RF-012 mudo), [002](../002-texto-nitido-tela-mobile/spec.md) (RF-002, fonte pixelada) e [003](../003-plataforma-estavel-e-nova-raposa/spec.md) (raposa)
 
