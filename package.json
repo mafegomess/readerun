@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/check-maps.ts && tsc --noEmit && vite build",
+    "build": "node scripts/check-maps.ts && node scripts/check-levels.ts && tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "gen:assets": "node scripts/gen-assets.ts",
     "gen:maps": "node scripts/gen-maps.ts",
-    "check:maps": "node scripts/check-maps.ts"
+    "check:maps": "node scripts/check-maps.ts",
+    "check:levels": "node scripts/check-levels.ts"
   },
   "dependencies": {
     "phaser": "^3.90.0"

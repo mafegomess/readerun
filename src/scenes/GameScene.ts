@@ -1,17 +1,27 @@
 import Phaser from 'phaser';
-import { HEIGHT, LIVES, MAX_WIDTH, WIDTH } from '../config.ts';
+import { HEIGHT, LIVES, MAX_WIDTH, PHYSICS, WIDTH } from '../config.ts';
 import { BOOKS, getBook, hexColor, pagesToCollect, type Book } from '../data/books.ts';
 import { music, sfx } from '../systems/audio.ts';
 import { touch } from '../systems/controls.ts';
 import { Fox } from '../systems/Fox.ts';
 import { save } from '../systems/save.ts';
 import { applyView, onViewChanged, screenOrigin } from '../systems/viewport.ts';
+import { drawScenery } from '../systems/scenery.ts';
 
 type TiledObject = Phaser.Types.Tilemaps.TiledObject & { class?: string };
 
+type FallState = 'idle' | 'shaking' | 'falling' | 'gone';
+
 type Mover = Phaser.Types.Physics.Arcade.ImageWithDynamicBody & {
   path: { sx: number; sy: number; dx: number; dy: number; len: number; speed: number; dir: number };
+  /** só nas plataformas que caem (spec 004, emenda H5) */
+  fall?: { state: FallState; t: number; x0: number; y0: number };
 };
+
+// plataforma que cai: tremor, tempo até desligar a colisão depois de cair e tempo para voltar
+const FALL_SHAKE = 0.45;
+const FALL_SOLID = 0.15;
+const FALL_RETURN = 2.5;
 
 export type HudData = {
   book: Book;
@@ -44,6 +54,7 @@ export class GameScene extends Phaser.Scene {
     clouds: Phaser.GameObjects.TileSprite;
   } | null = null;
   private mapHeight = 0;
+  private traps: Phaser.Physics.Arcade.Sprite[] = [];
 
   constructor() {
     super('Game');
@@ -52,6 +63,7 @@ export class GameScene extends Phaser.Scene {
   init(data: { bookId: string }) {
     this.book = getBook(data.bookId);
     this.movers = [];
+    this.traps = [];
     this.riding = null;
     this.collected = 0;
     this.lives = LIVES;
@@ -65,7 +77,8 @@ export class GameScene extends Phaser.Scene {
   create() {
     this.physics.resume(); // pode ter ficado pausada pelo game over anterior
     const map = this.make.tilemap({ key: `map-${this.book.id}` });
-    const tiles = map.addTilesetImage('tiles', 'tiles')!;
+    // tileset do cenário do livro (todos com o mesmo layout de tiles)
+    const tiles = map.addTilesetImage('tiles', 'tiles-' + this.book.scenery)!;
     this.mapHeight = map.heightInPixels;
     this.makeBackground();
 
@@ -89,6 +102,8 @@ export class GameScene extends Phaser.Scene {
     const pages = this.physics.add.group({ allowGravity: false });
     const checkpoints = this.physics.add.staticGroup();
     const movers = this.physics.add.group({ allowGravity: false, immovable: true });
+    const springs = this.physics.add.staticGroup();
+    const traps = this.physics.add.staticGroup();
     let spawn: TiledObject | null = null;
 
     const objects = map.getObjectLayer('objects')?.objects ?? [];
@@ -135,6 +150,29 @@ export class GameScene extends Phaser.Scene {
           this.movers.push(m);
           break;
         }
+        case 'falling': {
+          // tábua que cai: mesma colisão só por cima e mesma carona das plataformas móveis
+          const m = movers.create(x + 24, y + 8, 'falling') as Mover;
+          m.body.setSize(48, 10, false).setOffset(0, 0);
+          m.body.checkCollision.down = m.body.checkCollision.left = m.body.checkCollision.right = false;
+          m.body.friction.x = 0;
+          m.path = { sx: m.x, sy: m.y, dx: 0, dy: 0, len: 1, speed: 0, dir: 1 };
+          m.fall = { state: 'idle', t: 0, x0: m.x, y0: m.y };
+          this.movers.push(m);
+          break;
+        }
+        case 'spring': {
+          const s = springs.create(x + 8, y + 8, 'spring', 0) as Phaser.Physics.Arcade.Sprite;
+          (s.body as Phaser.Physics.Arcade.StaticBody).setSize(14, 8).setOffset(1, 8);
+          break;
+        }
+        case 'spikeTrap': {
+          const s = traps.create(x + 8, y + 8, 'spiketrap', 0) as Phaser.Physics.Arcade.Sprite;
+          (s.body as Phaser.Physics.Arcade.StaticBody).setSize(12, 7).setOffset(2, 9);
+          s.setData('period', Number(this.prop(o, 'period') ?? 2.4)).setData('offset', Number(this.prop(o, 'offset') ?? 0));
+          this.traps.push(s);
+          break;
+        }
       }
     }
 
@@ -154,7 +192,24 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.fox, planks);
     this.physics.add.collider(this.fox, movers, (_f, m) => {
       const mover = m as Mover;
-      if (this.fox.body.touching.down && mover.body.touching.up && !this.risingFrom(mover)) this.riding = mover;
+      if (!this.fox.body.touching.down || !mover.body.touching.up || this.risingFrom(mover)) return;
+      if (mover.fall?.state === 'idle') mover.fall.state = 'shaking';
+      if (!mover.fall || mover.fall.state === 'shaking') this.riding = mover;
+    });
+    // mola: só quando a raposa desce sobre ela, com os pés na metade de cima
+    this.physics.add.overlap(this.fox, springs, (_f, sp) => {
+      const s = sp as Phaser.Physics.Arcade.Sprite;
+      const body = this.fox.body;
+      if (this.dying || body.velocity.y <= 0 || body.bottom > s.body!.top + 6) return;
+      this.riding = null;
+      this.fox.bounce(PHYSICS.springVelocity);
+      s.setFrame(1);
+      this.time.delayedCall(120, () => s.setFrame(0));
+      sfx.spring();
+    });
+    // espinho móvel: só mata em pé (quadro 2)
+    this.physics.add.overlap(this.fox, traps, (_f, tr) => {
+      if ((tr as Phaser.Physics.Arcade.Sprite).getData('up')) this.die();
     });
     // carona e controle das plataformas a cada passo de física (não por quadro de tela)
     // referência guardada: no shutdown o plugin de física já zerou this.physics.world
@@ -201,6 +256,16 @@ export class GameScene extends Phaser.Scene {
     this.fox.update(dt);
     if (!this.dying && this.fox.y > this.mapHeight + 24) this.die();
 
+    // espinhos móveis pelo relógio da cena (pausa junto com o jogo):
+    // escondido 60% do ciclo, pontas por 0,4 s (aviso), em pé no resto
+    const now = this.time.now / 1000;
+    for (const s of this.traps) {
+      const period: number = s.getData('period');
+      const phase = (((now + s.getData('offset')) % period) + period) % period;
+      const frame = phase < period * 0.6 ? 0 : phase < period * 0.6 + 0.4 ? 1 : 2;
+      if (s.getData('frame') !== frame) s.setData('frame', frame).setData('up', frame === 2).setFrame(frame);
+    }
+
     if (this.bg) {
       const sx = this.cameras.main.scrollX;
       this.bg.far.tilePositionX = sx * 0.15;
@@ -214,8 +279,11 @@ export class GameScene extends Phaser.Scene {
    * A carona usa o deslocamento da plataforma naquele passo: aplicada por quadro
    * de tela, ela sobrava ou faltava em quadros com 0 ou 2 passos (a tremida).
    */
-  private onWorldStep() {
+  private onWorldStep(delta: number) {
     const fox = this.fox.body;
+    // velocidade de queda máxima (o limite do corpo ficou no impulso da mola)
+    if (fox.velocity.y > PHYSICS.maxFall) fox.velocity.y = PHYSICS.maxFall;
+    this.stepFalling(delta);
     const r = this.riding;
     // a carona começa no pouso (collider) e só termina ao pular, morrer, sair pela lateral
     // ou se afastar: no elevador descendo, a colisão some por frações de pixel a cada passo
@@ -236,6 +304,7 @@ export class GameScene extends Phaser.Scene {
     this.fox.supported = keep;
 
     for (const m of this.movers) {
+      if (m.fall) continue;
       const p = m.path;
       const b = m.body;
       // posição pelo corpo: o sprite só é sincronizado depois de todos os passos do quadro
@@ -246,6 +315,46 @@ export class GameScene extends Phaser.Scene {
       else if (along <= 0) p.dir = 1;
       b.setVelocity((p.dx / p.len) * p.speed * p.dir, (p.dy / p.len) * p.speed * p.dir);
     }
+  }
+
+  /** Plataformas que caem: tremem, caem, somem e voltam ao lugar (contrato de obstáculos). */
+  private stepFalling(delta: number) {
+    for (const m of this.movers) {
+      const f = m.fall;
+      if (!f || f.state === 'idle') continue;
+      f.t += delta;
+      if (f.state === 'shaking') {
+        // tremor só no desenho, sem mover o corpo
+        m.setDisplayOrigin(24 + (Math.floor(f.t * 30) % 2 ? 1 : -1), 8);
+        if (f.t >= FALL_SHAKE) {
+          f.state = 'falling';
+          f.t = 0;
+          m.setDisplayOrigin(24, 8);
+          m.body.setAllowGravity(true);
+          if (this.riding === m) this.riding = null;
+        }
+      } else if (f.state === 'falling') {
+        if (f.t >= FALL_SOLID) m.body.checkCollision.up = false;
+        if (m.body.top > this.mapHeight + 40) {
+          f.state = 'gone';
+          f.t = 0;
+          m.body.setAllowGravity(false).setVelocity(0, 0);
+          m.setVisible(false);
+          m.body.enable = false;
+        }
+      } else if (f.t >= FALL_RETURN) this.resetFalling(m);
+    }
+  }
+
+  private resetFalling(m: Mover) {
+    const f = m.fall!;
+    m.body.enable = true;
+    m.body.reset(f.x0, f.y0);
+    m.body.setAllowGravity(false).setVelocity(0, 0);
+    m.body.checkCollision.up = true;
+    m.setDisplayOrigin(24, 8).setVisible(true);
+    f.state = 'idle';
+    f.t = 0;
   }
 
   /**
@@ -325,6 +434,8 @@ export class GameScene extends Phaser.Scene {
     this.time.delayedCall(900, () => {
       if (this.lives <= 0) return this.gameOver();
       this.fox.body.checkCollision.none = false;
+      // plataformas que caíram voltam ao lugar junto com a raposa
+      for (const m of this.movers) if (m.fall && m.fall.state !== 'idle') this.resetFalling(m);
       this.fox.placeAt(this.respawn.x, this.respawn.bottom);
       this.fox.frozen = false;
       this.dying = false;
@@ -374,25 +485,15 @@ export class GameScene extends Phaser.Scene {
 
       const g = this.make.graphics({}, false);
 
-      // morros periódicos em 480px para a TileSprite emendar sem costura
-      const hills = (k: string, color: string, base: number, waves: [number, number, number][], trees: boolean) => {
+      // camadas longe/perto com o formato do cenário do livro (periódicas em 480px)
+      for (const [layer, color] of [
+        ['far', t.hillsFar],
+        ['near', t.hillsNear],
+      ] as const) {
         g.clear();
-        g.fillStyle(hexColor(color), 1);
-        const yAt = (x: number) => base + waves.reduce((a, [amp, f, ph]) => a + amp * Math.sin((Math.PI * 2 * f * x) / WIDTH + ph), 0);
-        for (let x = 0; x < WIDTH; x++) g.fillRect(x, Math.round(yAt(x)), 1, HEIGHT);
-        if (trees) {
-          for (let i = 0; i < 9; i++) {
-            const x = 20 + i * 53 + ((i * 37) % 19);
-            const y = Math.round(yAt(x));
-            const s = 6 + ((i * 7) % 5);
-            g.fillTriangle(x - s, y + 2, x + s, y + 2, x, y - s * 2.6);
-            g.fillRect(x - 1, y, 2, 6);
-          }
-        }
-        g.generateTexture(key(k), WIDTH, HEIGHT);
-      };
-      hills('far', t.hillsFar, 150, [[16, 2, 0], [9, 5, 1]], false);
-      hills('near', t.hillsNear, 190, [[12, 3, 2], [6, 7, 0]], true);
+        drawScenery(g, this.book.scenery, layer, hexColor(color));
+        g.generateTexture(key(layer), WIDTH, HEIGHT);
+      }
 
       g.clear();
       g.fillStyle(0xffffff, 0.55);

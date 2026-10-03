@@ -49,6 +49,11 @@ body {
   }
 }
 
+/* aviso na fonte escolhida nas Opções */
+body[data-font='legivel'] #rotate {
+  font: 16px/1.6 'Atkinson Hyperlegible', system-ui, sans-serif;
+}
+
 @media (orientation: portrait) and (pointer: coarse) {
   #rotate {
     display: flex;

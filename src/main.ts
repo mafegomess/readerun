@@ -3,18 +3,26 @@ import './style.css';
 import { COLORS, PHYSICS } from './config.ts';
 import { measureView, view, VIEW_CHANGED } from './systems/viewport.ts';
 import { lastInputWasTouch, requestFullscreen } from './systems/fullscreen.ts';
+import { save } from './systems/save.ts';
 import { BootScene } from './scenes/BootScene.ts';
 import { MenuScene } from './scenes/MenuScene.ts';
 import { GameScene } from './scenes/GameScene.ts';
 import { HudScene } from './scenes/HudScene.ts';
 import { RevealScene } from './scenes/RevealScene.ts';
+import { TitleScene } from './scenes/TitleScene.ts';
+import { OptionsScene } from './scenes/OptionsScene.ts';
+import { CreditsScene } from './scenes/CreditsScene.ts';
 
 async function start() {
-  // espera a fonte pixelada para o texto não nascer com a fonte padrão
+  // espera as duas fontes (pixelada e legível) para o texto não nascer com a fonte padrão
+  document.body.dataset.font = save.font;
   try {
-    await Promise.race([document.fonts.load('8px "Press Start 2P"'), new Promise((r) => setTimeout(r, 2500))]);
+    await Promise.race([
+      Promise.all([document.fonts.load('8px "Press Start 2P"'), document.fonts.load('11px "Atkinson Hyperlegible"')]),
+      new Promise((r) => setTimeout(r, 2500)),
+    ]);
   } catch {
-    // sem a fonte, segue com monospace
+    // sem as fontes, segue com as de reserva
   }
 
   measureView();
@@ -36,7 +44,7 @@ async function start() {
       default: 'arcade',
       arcade: { gravity: { x: 0, y: PHYSICS.gravity }, fps: PHYSICS.stepsPerSecond, debug: false },
     },
-    scene: [BootScene, MenuScene, GameScene, HudScene, RevealScene],
+    scene: [BootScene, TitleScene, MenuScene, OptionsScene, CreditsScene, GameScene, HudScene, RevealScene],
   });
   // janela redimensionada, celular girado ou barra do navegador aparecendo/sumindo
   let timer: number | undefined;

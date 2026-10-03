@@ -5,6 +5,8 @@
 **Status**: Implementado (documentação retroativa do MVP, commit `ccde68f`)
 **Pedido original**: "Jogo de navegador em estilo runner. O jogador é uma raposa que corre e precisa recuperar páginas de livros perdidas. Cada fase representa um livro diferente, e ao pegar todas as páginas necessárias o livro é revelado e o jogador recebe uma recomendação."
 
+> **Emendas da [004](../004-menu-inicial-e-novos-livros/spec.md)**: RF-002 passa a ter máximo de **50** páginas (antes 20); a estante (História 4) virou a tela "Fases", aberta pelo botão Jogar do novo menu inicial; RF-012 ganhou volumes separados de música e efeitos nas Opções (o mudo continua); Alice saiu do catálogo, que agora tem 8 livros. Pela emenda H5 da 004, cada livro tem cenário próprio (tileset, enfeites e fundo) e receita de fase própria; RF-005 ganhou três obstáculos (plataforma que cai, mola, espinho móvel) e trechos com teto, subidas em andares e caminhos alternativos; CS-001 passou a ser garantido no build por `check-levels`.
+
 > Esta spec registra o comportamento **atual** do jogo, servindo de base para as próximas features. Ajustes futuros devem referenciá-la ou emendá-la, sem contradizê-la em silêncio.
 
 ## Cenários de uso e testes

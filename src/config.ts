@@ -10,7 +10,14 @@ export const HEIGHT = 270;
 export const MAX_DPR = 2;
 export const TILE = 16;
 
-export const FONT = '"Press Start 2P", monospace';
+/**
+ * Fontes do jogo (escolha nas Opções). A legível usa tamanhos maiores para ter a
+ * mesma altura visual da pixelada e caber no mesmo layout (desenhado para 8/16 px).
+ */
+export const FONTS = {
+  pixel: { family: '"Press Start 2P", monospace', scale: 1 },
+  legivel: { family: '"Atkinson Hyperlegible", system-ui, sans-serif', scale: 1.375 },
+} as const;
 
 export const PHYSICS = {
   gravity: 1000,
@@ -26,6 +33,8 @@ export const PHYSICS = {
    * quadro desenhado tem passo, e a câmera não fica defasada da raposa (spec 003, tremida).
    */
   stepsPerSecond: 240,
+  /** impulso da mola (spec 004, emenda H5): ~135 px de altura, cerca de 8 tiles */
+  springVelocity: 520,
 };
 
 export const LIVES = 3;

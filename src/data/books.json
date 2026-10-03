@@ -7,6 +7,7 @@
     "bookPages": 256,
     "map": "dom-casmurro",
     "synopsis": "Bentinho, já velho e solitário, revisita a juventude e o amor por Capitu, a menina de \"olhos de ressaca\". Ao narrar a própria história, ele tenta provar uma traição que talvez só exista na cabeça dele. Um clássico que convida o leitor a desconfiar do narrador.",
+    "scenery": "rio-antigo",
     "theme": {
       "skyTop": "#2b2350",
       "skyBottom": "#d9826b",
@@ -14,23 +15,25 @@
       "hillsNear": "#35295a",
       "cover": "#6b2f3a",
       "coverAccent": "#e8c170"
-    }
-  },
-  {
-    "id": "alice",
-    "title": "Alice no País das Maravilhas",
-    "author": "Lewis Carroll",
-    "year": 1865,
-    "bookPages": 160,
-    "map": "alice",
-    "synopsis": "Alice segue um coelho apressado toca abaixo e cai num mundo onde a lógica vira de cabeça para baixo: ela encolhe, cresce, toma chá com o Chapeleiro Maluco e enfrenta a temperamental Rainha de Copas. Uma aventura cheia de jogos de palavras que encanta leitores de todas as idades.",
-    "theme": {
-      "skyTop": "#7fc8f8",
-      "skyBottom": "#ffd6e8",
-      "hillsFar": "#9ad18b",
-      "hillsNear": "#6cb36a",
-      "cover": "#2f5f8a",
-      "coverAccent": "#ffb3c8"
+    },
+    "level": {
+      "weights": {
+        "gap": 2,
+        "stepUp": 3,
+        "stepDown": 3,
+        "spikes": 1,
+        "floating": 3,
+        "movingH": 1,
+        "lift": 1,
+        "falling": 0,
+        "springWall": 0,
+        "spikeTrap": 0
+      },
+      "formats": {
+        "ceiling": 0,
+        "climb": 1,
+        "branch": 2
+      }
     }
   },
   {
@@ -41,6 +44,7 @@
     "bookPages": 96,
     "map": "o-alienista",
     "synopsis": "O médico Simão Bacamarte funda a Casa Verde, um hospício na pequena Itaguaí, e começa a internar quem considera louco, até que quase toda a vila está lá dentro. Uma sátira curta e afiada sobre ciência, poder e os limites entre razão e loucura.",
+    "scenery": "vila-colonial",
     "theme": {
       "skyTop": "#3d6b5a",
       "skyBottom": "#c9e4b4",
@@ -48,6 +52,247 @@
       "hillsNear": "#3f6e4c",
       "cover": "#2e5b3f",
       "coverAccent": "#f2e6c4"
+    },
+    "level": {
+      "weights": {
+        "gap": 3,
+        "stepUp": 1,
+        "stepDown": 1,
+        "spikes": 2,
+        "floating": 2,
+        "movingH": 0,
+        "lift": 0,
+        "falling": 1,
+        "springWall": 0,
+        "spikeTrap": 0
+      },
+      "formats": {
+        "ceiling": 0,
+        "climb": 0,
+        "branch": 0
+      }
+    }
+  },
+  {
+    "id": "capitaes-da-areia",
+    "title": "Capitães da Areia",
+    "author": "Jorge Amado",
+    "year": 1937,
+    "bookPages": 300,
+    "map": "capitaes-da-areia",
+    "synopsis": "Nas ruas de Salvador, um grupo de meninos abandonados vive num trapiche à beira do mar e sobrevive de pequenos golpes, liderado pelo destemido Pedro Bala. Entre aventuras, amizade e liberdade, Jorge Amado mostra a infância que a cidade prefere não ver, com uma ternura que fica na memória.",
+    "scenery": "praia",
+    "theme": {
+      "skyTop": "#2f7fb5",
+      "skyBottom": "#ffd59e",
+      "hillsFar": "#3f8fb5",
+      "hillsNear": "#6b4428",
+      "cover": "#b5542c",
+      "coverAccent": "#ffe2a8"
+    },
+    "level": {
+      "weights": {
+        "gap": 3,
+        "stepUp": 1,
+        "stepDown": 1,
+        "spikes": 1,
+        "floating": 1,
+        "movingH": 4,
+        "lift": 1,
+        "falling": 1,
+        "springWall": 2,
+        "spikeTrap": 0
+      },
+      "formats": {
+        "ceiling": 0,
+        "climb": 0,
+        "branch": 1
+      }
+    }
+  },
+  {
+    "id": "o-sol-e-para-todos",
+    "title": "O Sol é Para Todos",
+    "author": "Harper Lee",
+    "year": 1960,
+    "bookPages": 350,
+    "map": "o-sol-e-para-todos",
+    "synopsis": "No Alabama dos anos 1930, a pequena Scout cresce entre brincadeiras e mistérios da vizinhança, até que seu pai, o advogado Atticus Finch, aceita defender um homem negro acusado injustamente. Um romance sobre justiça, empatia e coragem, contado pelo olhar de uma criança.",
+    "scenery": "cidade-pequena",
+    "theme": {
+      "skyTop": "#f2b45c",
+      "skyBottom": "#fff1c9",
+      "hillsFar": "#9fb86b",
+      "hillsNear": "#7a9a4f",
+      "cover": "#7a3b2e",
+      "coverAccent": "#f6d27a"
+    },
+    "level": {
+      "weights": {
+        "gap": 2,
+        "stepUp": 2,
+        "stepDown": 2,
+        "spikes": 1,
+        "floating": 3,
+        "movingH": 1,
+        "lift": 1,
+        "falling": 0,
+        "springWall": 1,
+        "spikeTrap": 0
+      },
+      "formats": {
+        "ceiling": 0,
+        "climb": 3,
+        "branch": 2
+      }
+    }
+  },
+  {
+    "id": "jogos-vorazes",
+    "title": "Jogos Vorazes",
+    "author": "Suzanne Collins",
+    "year": 2008,
+    "bookPages": 400,
+    "map": "jogos-vorazes",
+    "synopsis": "Em Panem, todo ano doze distritos enviam dois jovens para uma arena onde só um pode sair vivo, tudo transmitido como espetáculo. Quando a irmã caçula é sorteada, Katniss Everdeen se oferece no lugar dela. Uma distopia eletrizante sobre sobrevivência, desigualdade e o poder das imagens.",
+    "scenery": "floresta",
+    "theme": {
+      "skyTop": "#1f2a2e",
+      "skyBottom": "#c4683a",
+      "hillsFar": "#3e5a3e",
+      "hillsNear": "#2b4430",
+      "cover": "#1e1e24",
+      "coverAccent": "#e8a33d"
+    },
+    "level": {
+      "weights": {
+        "gap": 3,
+        "stepUp": 1,
+        "stepDown": 1,
+        "spikes": 1,
+        "floating": 2,
+        "movingH": 1,
+        "lift": 0,
+        "falling": 3,
+        "springWall": 1,
+        "spikeTrap": 3
+      },
+      "formats": {
+        "ceiling": 0,
+        "climb": 1,
+        "branch": 1
+      }
+    }
+  },
+  {
+    "id": "um-defeito-de-cor",
+    "title": "Um Defeito de Cor",
+    "author": "Ana Maria Gonçalves",
+    "year": 2006,
+    "bookPages": 968,
+    "map": "um-defeito-de-cor",
+    "synopsis": "Capturada ainda menina no Daomé e escravizada no Brasil, Kehinde narra sua vida inteira: a travessia, a Bahia do século XIX, a luta pela liberdade e a busca por um filho perdido. Um romance monumental que devolve ao leitor uma parte essencial da história do país.",
+    "scenery": "costa-colonial",
+    "theme": {
+      "skyTop": "#3a2a5e",
+      "skyBottom": "#e6a15a",
+      "hillsFar": "#3d6f9e",
+      "hillsNear": "#8a4a3e",
+      "cover": "#5b1f2e",
+      "coverAccent": "#e9c46a"
+    },
+    "level": {
+      "weights": {
+        "gap": 2,
+        "stepUp": 1,
+        "stepDown": 1,
+        "spikes": 2,
+        "floating": 2,
+        "movingH": 3,
+        "lift": 1,
+        "falling": 2,
+        "springWall": 1,
+        "spikeTrap": 1
+      },
+      "formats": {
+        "ceiling": 2,
+        "climb": 1,
+        "branch": 1
+      }
+    }
+  },
+  {
+    "id": "trono-de-vidro",
+    "title": "Trono de Vidro",
+    "author": "Sarah J. Maas",
+    "year": 2012,
+    "bookPages": 392,
+    "map": "trono-de-vidro",
+    "synopsis": "Celaena Sardothien, a assassina mais temida do reino, recebe uma chance de deixar as minas de sal onde cumpre pena: vencer uma competição mortal e se tornar campeã do rei que a aprisionou. Fantasia cheia de intriga, ação e magia escondida, abrindo uma série épica.",
+    "scenery": "castelo",
+    "theme": {
+      "skyTop": "#16233f",
+      "skyBottom": "#7b8fc4",
+      "hillsFar": "#3b4a7a",
+      "hillsNear": "#283559",
+      "cover": "#1b2c4f",
+      "coverAccent": "#c9d6f0"
+    },
+    "level": {
+      "weights": {
+        "gap": 2,
+        "stepUp": 1,
+        "stepDown": 1,
+        "spikes": 2,
+        "floating": 1,
+        "movingH": 1,
+        "lift": 2,
+        "falling": 2,
+        "springWall": 0,
+        "spikeTrap": 3
+      },
+      "formats": {
+        "ceiling": 3,
+        "climb": 1,
+        "branch": 1
+      }
+    }
+  },
+  {
+    "id": "quarto-de-despejo",
+    "title": "Quarto de Despejo",
+    "author": "Carolina Maria de Jesus",
+    "year": 1960,
+    "bookPages": 200,
+    "map": "quarto-de-despejo",
+    "synopsis": "Nos anos 1950, Carolina Maria de Jesus, catadora de papel na favela do Canindé, em São Paulo, escreve em cadernos achados no lixo o dia a dia da fome, dos filhos e da cidade que a ignora. Um diário potente e lírico que se tornou um marco da literatura brasileira.",
+    "scenery": "favela",
+    "theme": {
+      "skyTop": "#7d8fa0",
+      "skyBottom": "#e8d9b8",
+      "hillsFar": "#8c8274",
+      "hillsNear": "#6e665a",
+      "cover": "#6d5a3e",
+      "coverAccent": "#f2e3c2"
+    },
+    "level": {
+      "weights": {
+        "gap": 3,
+        "stepUp": 2,
+        "stepDown": 2,
+        "spikes": 1,
+        "floating": 2,
+        "movingH": 0,
+        "lift": 0,
+        "falling": 1,
+        "springWall": 3,
+        "spikeTrap": 0
+      },
+      "formats": {
+        "ceiling": 0,
+        "climb": 3,
+        "branch": 1
+      }
     }
   }
 ]
