@@ -60,6 +60,10 @@ Concluída em [research.md](./research.md): D1 causa medida · D2 carona no `wor
 1. **H1 primeiro**: é independente, já medida, e pode ir sozinha para produção se a arte demorar.
 2. **H2**: gerar a prévia → aprovação → integrar (folha, animações, `Fox`) → ícones.
 
+## Correções pós-implementação
+
+No teste em aparelho real, a tremida continuava (era a câmera, não a carona) e a cauda do pulo aparecia cortada. Ver research D9 e tarefas T020–T023: câmera sem arredondar a rolagem, física a 240 passos/s, quadros afastados da borda e verificação automática no gerador.
+
 ## Riscos e complexidade
 
 | Risco / desvio | Por que é necessário | Alternativa mais simples descartada porque |

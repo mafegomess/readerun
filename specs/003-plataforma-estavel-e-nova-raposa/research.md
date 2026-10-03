@@ -79,6 +79,28 @@ Total: 27 quadros de 32×32 (folha de 864×32). *Ajustado nas revisões da prév
 
 O corpo continua 14×20 com deslocamento (9, 11). A arte nova mantém os pés na linha 30 do quadro e o tronco centrado em x ≈ 16, para que o espelhamento (`flipX`) continue alinhado ao corpo. A cauda pode passar do corpo, porque não colide.
 
+## D9 – Tremida na tela (descoberta no teste em aparelho real)
+
+**Relato**: a raposa continuava tremendo na plataforma horizontal, principalmente perto do chão. A medição de D1 olhava só a raposa em relação à plataforma (que andam juntas) e não a posição **na tela**.
+
+**Causa**, conferida no Phaser 3.90 (`Camera.preRender`):
+1. A câmera seguia com `startFollow(fox, true, …)`. O `true` arredonda a rolagem para **pixels lógicos** inteiros. Com o zoom da spec 002 (2,5–3,7×), cada degrau vale 2,5–3,7 px de tela. Somado à suavização (0,12), o avanço pequeno de cada quadro era arredondado para baixo e se perdia: a câmera ficava parada e então pulava. O chão andava em degraus de 2,5 px, e a raposa ia e voltava até 1,9 px. Com o chão parado ao lado, fica visível. O Phaser também desliga o arredondamento dos sprites quando o zoom não é inteiro.
+2. A física a 60 passos/s, desenhada a 120/144 Hz, deixa quadros sem passo: a câmera anda e a raposa não.
+
+**Correção**: câmera sem arredondar a rolagem e física a **240 passos/s** (múltiplo de 60 e 120, próximo de 144: quase todo quadro tem passo, com deslocamentos 4× menores).
+
+**Medição na tela** (raposa parada sobre a plataforma, longe das inversões, 8 s, intervalos irregulares):
+
+| Taxa | Antes | Depois |
+|---|---|---|
+| 60 Hz | raposa vai e volta 1,9 px; chão em degraus de 2,5 px | ≤ 0,5 px; chão regular (≤ 0,43 px de variação) |
+| 120 Hz | chão em degraus de 2,5 px | ≤ 0,7 px |
+| 144 Hz | chão em degraus de 2,5 px | ≤ 0,4 px |
+
+O que sobra fica abaixo de 1 px de tela. Câmera sem suavização (lerp 1) zera a raposa, mas passa a irregularidade para o chão (até 2,2 px a 60 Hz); por isso a suavização 0,12 foi mantida. Física com 240 passos: velocidade 130 px/s, pulo de 64 px (antes 62; mais próximo do teórico) e alcance de 74 px, sem tornar fase alguma impossível.
+
+**Alternativas descartadas**: interpolar a posição desenhada entre passos (o Arcade não oferece; escrever no sprite realimenta a física); `fixedStep: false` (física dependente do fps).
+
 ## D8 – Aprovação do visual (CS-003)
 
 Antes de integrar no jogo, gerar uma **prévia** em `scratchpad`: a folha ampliada e uma página HTML local com as animações rodando sobre os 3 fundos de fase (escuro, claro, verde). Só depois da aprovação o sprite entra no jogo e o ícone é regerado.

@@ -183,7 +183,9 @@ export class GameScene extends Phaser.Scene {
       this.layoutBackground();
     });
     cam.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-    cam.startFollow(this.fox, true, 0.12, 0.12);
+    // sem arredondar a rolagem: com zoom, o Phaser arredonda em pixels lógicos (2,5–3,7 px de tela)
+    // e, somado à suavização, a câmera andava aos solavancos (a tremida perto do chão)
+    cam.startFollow(this.fox, false, 0.12, 0.12);
     cam.setDeadzone(40, 60);
     cam.fadeIn(300);
 

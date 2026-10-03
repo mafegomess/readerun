@@ -51,6 +51,14 @@
 
 **Ponto de controle**: raposa nova aprovada e integrada, sem regressão da H1
 
+## Fase 5: Correções do teste em aparelho real
+
+- [x] T020 [H1] Medir a tremida **na tela** (não só raposa × plataforma): câmera arredondando a rolagem em pixels lógicos + física a 60 passos/s causavam degraus de 2,5 px no chão e vai-e-vem da raposa (research D9)
+- [x] T021 [H1] `src/scenes/GameScene.ts`: `startFollow(fox, false, …)` (sem arredondar a rolagem); `src/config.ts` + `src/main.ts`: física a 240 passos/s (`PHYSICS.stepsPerSecond`)
+  - Resultado: vai-e-vem ≤ 0,7 px de tela e chão regular a 60/120/144 Hz; carona continua com 0 de deriva e 0 piscadas; velocidade 130 px/s, pulo 64 px, alcance 74 px
+- [x] T022 [H2] `scripts/gen-assets.ts`: cauda inteira no pulo (e também em 4 quadros da pose parada e no pouso, que encostavam na borda sem ninguém notar); no pulo, focinho e orelha também encostavam (cabeça recuada 1 px e abaixada 1 px)
+- [x] T023 [H2] `scripts/gen-assets.ts`: verificação automática que impede gerar a folha se algum quadro encostar na borda (`--no-check` só para diagnóstico)
+
 ## Fase final: Acabamento e verificação
 
 - [x] T016 [P] Emenda curta em `specs/001-mvp-raposa-leitora/plan.md`: carona por passo de física (`worldstep`) e folha da raposa com 19 quadros

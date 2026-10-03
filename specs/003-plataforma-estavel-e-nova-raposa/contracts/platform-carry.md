@@ -22,4 +22,5 @@
 
 - Parada sobre a plataforma durante um ciclo inteiro: oscilação de `raposa.x − plataforma.x` ≤ 1 px lógico; `raposa.body.bottom − plataforma.body.top` ≈ 0.
 - "No chão" sem piscar e animação só `fox-idle` enquanto parada sobre a plataforma.
+- **Na tela**: com a raposa parada sobre a plataforma, o vai-e-vem dela e a irregularidade do chão ficam abaixo de 1 px de tela (câmera sem arredondar a rolagem, física a 240 passos/s; research D9).
 - Valem a 60, 120 e 144 Hz, com intervalos irregulares entre quadros.

@@ -13,6 +13,7 @@ npm run build      # check-maps + typecheck + vite build
    - oscilação de `raposa.x − plataforma.x` (horizontal) e `raposa.bottom − plataforma.top` (elevador) **≤ 1 px lógico** (CS-002)
    - "no chão" **sem piscar**
    - animações vistas: só `fox-idle`
+   - **na tela**: posição da raposa `(x − scrollX) × zoom` sem vai-e-vem acima de 1 px e chão sem degraus (fora das inversões da plataforma)
 3. Andar sobre a plataforma em movimento: o deslocamento é suave e as velocidades se somam.
 4. Pular a partir da plataforma e pousar de novo nela; pousar exatamente quando ela inverte o sentido.
 5. Elevador: chegar ao topo e sair andando para o chão firme.

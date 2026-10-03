@@ -355,7 +355,7 @@ const TAIL_KEYS: TailPose[] = [
   { ctrl: [5, 17], tip: [3, 9] },
   { ctrl: [7, 13], tip: [7, 5] },
   { ctrl: [5, 9], tip: [2, 13] },
-  { ctrl: [5, 20], tip: [1, 19] },
+  { ctrl: [6.5, 20], tip: [4.5, 19.5] },
   { ctrl: [3, 19], tip: [4, 27] },
 ];
 
@@ -413,10 +413,10 @@ function foxPoses(): Pose[] {
       tail: { ctrl: [5, 17.5 + wave * 1.5], tip: [2, 13 + wave * 3] },
     };
   });
-  const jump: Pose = { bob: -1, stretch: 1, legs: [[-4, -2], [-3, -2], [4, -3], [3, -2]], tail: { ctrl: [4, 20], tip: [0, 19] }, head: [1, 0] };
+  const jump: Pose = { bob: -1, stretch: 1, legs: [[-4, -2], [-3, -2], [4, -3], [3, -2]], tail: { ctrl: [7.5, 19.5], tip: [5, 18.5] }, head: [-1, 1] };
   const fall: Pose = { bob: 0, legs: [[-2, 0], [-1, 0], [2, 0], [1, 0]], tail: { ctrl: [6, 13], tip: [5, 6] } };
   const land: Pose[] = [
-    { bob: 2, legs: [[-2, 0], [-1, 0], [1, 0], [2, 0]], tail: { ctrl: [4, 22], tip: [1, 21] }, head: [0, 1] },
+    { bob: 2, legs: [[-2, 0], [-1, 0], [1, 0], [2, 0]], tail: { ctrl: [6.5, 22], tip: [4.5, 21] }, head: [0, 1] },
     { bob: 1, legs: STAND, tail: { ctrl: [5, 19], tip: [2, 16] } },
   ];
   const hurt: Pose = { bob: 1, legs: [[-2, 0], [2, 0], [-2, 0], [2, 0]], tail: { ctrl: [4, 22], tip: [2, 26] }, hurt: true };
@@ -430,7 +430,19 @@ function foxPoses(): Pose[] {
 }
 
 function genFox() {
-  save('fox.png', sheet(foxPoses().map(foxFrame)));
+  const frames = foxPoses().map(foxFrame);
+  // nada do desenho pode encostar na borda do quadro: o contorno ficaria de fora (parte cortada)
+  const cut = frames.flatMap((img, i) => {
+    for (let k = 0; k < 32; k++)
+      for (const [x, y] of [[0, k], [31, k], [k, 0]] as Pt[]) {
+        const o = (y * 32 + x) * 4;
+        const isOutline = img.data[o] === OUTLINE[0] && img.data[o + 1] === OUTLINE[1] && img.data[o + 2] === OUTLINE[2];
+        if (img.data[o + 3] && !isOutline) return [i];
+      }
+    return [];
+  });
+  if (cut.length && !process.argv.includes("--no-check")) throw new Error(`raposa cortada na borda do quadro: ${cut.join(", ")}`);
+  save('fox.png', sheet(frames));
 }
 
 /** Quadro "parado" usado no ícone do app. */

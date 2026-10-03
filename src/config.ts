@@ -21,6 +21,11 @@ export const PHYSICS = {
   maxFall: 420,
   coyoteTime: 0.1,
   jumpBuffer: 0.12,
+  /**
+   * Passos de física por segundo. 240 é múltiplo de 60 e 120 (e próximo de 144): quase todo
+   * quadro desenhado tem passo, e a câmera não fica defasada da raposa (spec 003, tremida).
+   */
+  stepsPerSecond: 240,
 };
 
 export const LIVES = 3;
