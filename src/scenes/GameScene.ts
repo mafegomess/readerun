@@ -127,6 +127,8 @@ export class GameScene extends Phaser.Scene {
           const m = movers.create(x + w / 2, y + 8, 'platform') as Mover;
           m.body.setSize(48, 10, false).setOffset(0, 0);
           m.body.checkCollision.down = m.body.checkCollision.left = m.body.checkCollision.right = false;
+          // a carona é feita por passo de física em onWorldStep; a nativa do Arcade fica desligada
+          m.body.friction.x = 0;
           const dx = Number(this.prop(o, 'dx') ?? 0);
           const dy = Number(this.prop(o, 'dy') ?? 0);
           m.path = { sx: m.x, sy: m.y, dx, dy, len: Math.hypot(dx, dy) || 1, speed: Number(this.prop(o, 'speed') ?? 40), dir: 1 };
@@ -151,8 +153,14 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.fox, ground);
     this.physics.add.collider(this.fox, planks);
     this.physics.add.collider(this.fox, movers, (_f, m) => {
-      if (this.fox.body.touching.down) this.riding = m as Mover;
+      const mover = m as Mover;
+      if (this.fox.body.touching.down && mover.body.touching.up && !this.risingFrom(mover)) this.riding = mover;
     });
+    // carona e controle das plataformas a cada passo de física (não por quadro de tela)
+    // referência guardada: no shutdown o plugin de física já zerou this.physics.world
+    const world = this.physics.world;
+    world.on(Phaser.Physics.Arcade.Events.WORLD_STEP, this.onWorldStep, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => world.off(Phaser.Physics.Arcade.Events.WORLD_STEP, this.onWorldStep, this));
     this.physics.add.overlap(this.fox, spikes, () => this.die());
     this.physics.add.overlap(this.fox, pages, (_f, p) => this.collect(p as Phaser.Physics.Arcade.Sprite));
     this.physics.add.overlap(this.fox, checkpoints, (_f, c) => this.reachCheckpoint(c as Phaser.Physics.Arcade.Sprite));
@@ -175,7 +183,9 @@ export class GameScene extends Phaser.Scene {
       this.layoutBackground();
     });
     cam.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-    cam.startFollow(this.fox, true, 0.12, 0.12);
+    // sem arredondar a rolagem: com zoom, o Phaser arredonda em pixels lógicos (2,5–3,7 px de tela)
+    // e, somado à suavização, a câmera andava aos solavancos (a tremida perto do chão)
+    cam.startFollow(this.fox, false, 0.12, 0.12);
     cam.setDeadzone(40, 60);
     cam.fadeIn(300);
 
@@ -188,19 +198,8 @@ export class GameScene extends Phaser.Scene {
 
   update(_time: number, deltaMs: number) {
     const dt = Math.min(deltaMs, 50) / 1000;
-    // carona: a raposa acompanha o deslocamento horizontal da plataforma em que está
-    if (this.riding) this.fox.x += this.riding.body.deltaX();
-    this.riding = null;
     this.fox.update(dt);
     if (!this.dying && this.fox.y > this.mapHeight + 24) this.die();
-
-    for (const m of this.movers) {
-      const p = m.path;
-      const along = ((m.x - p.sx) * p.dx + (m.y - p.sy) * p.dy) / p.len;
-      if (along >= p.len) p.dir = -1;
-      else if (along <= 0) p.dir = 1;
-      m.setVelocity((p.dx / p.len) * p.speed * p.dir, (p.dy / p.len) * p.speed * p.dir);
-    }
 
     if (this.bg) {
       const sx = this.cameras.main.scrollX;
@@ -208,6 +207,54 @@ export class GameScene extends Phaser.Scene {
       this.bg.near.tilePositionX = sx * 0.35;
       this.bg.clouds.tilePositionX = sx * 0.05 + this.time.now * 0.004;
     }
+  }
+
+  /**
+   * Roda depois de cada passo de física (corpos movidos e colisões feitas).
+   * A carona usa o deslocamento da plataforma naquele passo: aplicada por quadro
+   * de tela, ela sobrava ou faltava em quadros com 0 ou 2 passos (a tremida).
+   */
+  private onWorldStep() {
+    const fox = this.fox.body;
+    const r = this.riding;
+    // a carona começa no pouso (collider) e só termina ao pular, morrer, sair pela lateral
+    // ou se afastar: no elevador descendo, a colisão some por frações de pixel a cada passo
+    const keep =
+      !!r &&
+      !this.dying &&
+      !this.risingFrom(r) &&
+      fox.right > r.body.left &&
+      fox.left < r.body.right &&
+      Math.abs(fox.bottom - r.body.top) <= 4;
+    if (r && keep) {
+      fox.x += r.body.deltaX();
+      fox.y = r.body.top - fox.height;
+      fox.velocity.y = 0;
+    } else {
+      this.riding = null;
+    }
+    this.fox.supported = keep;
+
+    for (const m of this.movers) {
+      const p = m.path;
+      const b = m.body;
+      // posição pelo corpo: o sprite só é sincronizado depois de todos os passos do quadro
+      const cx = b.x + b.halfWidth;
+      const cy = b.y + 8;
+      const along = ((cx - p.sx) * p.dx + (cy - p.sy) * p.dy) / p.len;
+      if (along >= p.len) p.dir = -1;
+      else if (along <= 0) p.dir = 1;
+      b.setVelocity((p.dx / p.len) * p.speed * p.dir, (p.dy / p.len) * p.speed * p.dir);
+    }
+  }
+
+  /**
+   * A raposa está subindo mais rápido que a plataforma (pulou)? No elevador subindo
+   * a colisão já dá a ela a velocidade da plataforma, que não pode contar como pulo;
+   * no elevador descendo, ficar mais lenta que a plataforma também não é pulo.
+   */
+  private risingFrom(m: Mover) {
+    return this.fox.body.velocity.y < Math.min(0, m.body.velocity.y) - 5;
   }
 
   /** Estado atual para (re)montar a HUD. */

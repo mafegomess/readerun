@@ -7,8 +7,11 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { FOX_FRAMES, FOX_FRAME_COUNT } from '../src/data/foxFrames.ts';
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'assets');
+// --out <pasta> gera em outro lugar (ex.: prévias para aprovação), sem tocar em public/assets
+const outArg = process.argv.indexOf('--out');
+const OUT = outArg > 0 ? process.argv[outArg + 1] : join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'assets');
 
 type RGBA = [number, number, number, number];
 
@@ -169,9 +172,6 @@ function rng(seed: number) {
 // ---------- paleta ----------
 
 const OUTLINE = hex('#2a1a14');
-const FOX = hex('#e8792b');
-const FOX_DARK = hex('#b5531c');
-const CREAM = hex('#fff3e0');
 const GRASS = hex('#5fb04a');
 const GRASS_LIGHT = hex('#8fd36a');
 const GRASS_DARK = hex('#3f8a3a');
@@ -190,126 +190,264 @@ const RED = hex('#d6453d');
 const GOLD = hex('#e8c170');
 const WHITE = hex('#ffffff');
 
-// ---------- raposa (32x32, olhando pra direita) ----------
+// ---------- raposa (32x32, de perfil olhando pra direita) ----------
+// Desenho original no estilo das referências da spec 003: laranja vivo, olho grande,
+// peito/ponta da cauda/miolo das orelhas brancos, pernas marrom-escuras, contorno escuro.
+// Pés na linha 30 e tronco centrado em x ≈ 16: o corpo de colisão (14×20 em 9,11) não muda.
+
+const FOX_ORANGE = hex('#f7a21b');
+const FOX_LIGHT = hex('#ffc04a');
+const FOX_SHADE = hex('#c45a14');
+const FOX_LEG = hex('#5a2a0e');
+const FOX_WHITE = hex('#ffffff');
+const FOX_WHITE_SHADE = hex('#b9b9c2');
+
+type Pt = [number, number];
+type TailPose = { ctrl: Pt; tip: Pt };
 
 type Pose = {
-  bob: number; // deslocamento vertical do corpo
-  legs: [number, number][]; // deslocamento [dx, dy] do pé de cada perna: traseira1, traseira2, dianteira1, dianteira2
-  tail: number; // inclinação da cauda
+  /** deslocamento vertical do corpo e da cabeça */
+  bob: number;
+  /** deslocamento [dx, dy] do pé de cada perna: traseira longe, traseira perto, dianteira longe, dianteira perto */
+  legs: [Pt, Pt, Pt, Pt];
+  tail: TailPose;
+  /** corpo mais comprido (pulo) */
+  stretch?: number;
+  /** cabeça um pouco à frente/para baixo, em px */
+  head?: Pt;
   hurt?: boolean;
 };
 
-function fox(p: Pose): Img {
+function bezier(a: Pt, c: Pt, b: Pt, t: number): Pt {
+  const u = 1 - t;
+  return [u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]];
+}
+
+/** Cauda volumosa: fina na base, gorda no meio, ponta branca; sombra por baixo. */
+function drawTail(img: Img, base: Pt, pose: TailPose) {
+  const radius = (t: number) => 1.3 + 2.3 * Math.sin(Math.PI * Math.min(1, t * 1.05));
+  for (const pass of ['shade', 'main'] as const) {
+    for (let t = 0; t <= 1.0001; t += 0.02) {
+      const [x, y] = bezier(base, pose.ctrl, pose.tip, t);
+      const r = radius(t);
+      const white = t > 0.66;
+      if (pass === 'shade') img.ellipse(x, y + 1, r, r, white ? FOX_WHITE_SHADE : FOX_SHADE);
+      else img.ellipse(x, y, r, r * 0.92, white ? FOX_WHITE : FOX_ORANGE);
+    }
+  }
+}
+
+function foxFrame(p: Pose): Img {
   const img = new Img(32, 32);
   const b = p.bob;
-  const hips: [number, number][] = [
-    [10, 23 + b],
-    [12, 23 + b],
-    [18, 23 + b],
-    [20, 23 + b],
+  const st = p.stretch ?? 0;
+  const [hx, hy] = p.head ?? [0, 0];
+
+  // pernas de trás (mais escuras) antes do corpo
+  const hips: Pt[] = [
+    [11 - st, 24 + b],
+    [13 - st, 24 + b],
+    [18 + st, 24 + b],
+    [20 + st, 24 + b],
   ];
-  // pernas de trás (mais escuras) primeiro, para ficarem atrás do corpo
-  [1, 3, 0, 2].forEach((i) => {
-    const [hx, hy] = hips[i];
+  const leg = (i: number) => {
+    const [x0, y0] = hips[i];
     const [dx, dy] = p.legs[i];
-    const fx = hx + dx;
+    const fx = x0 + dx;
     const fy = 29 + dy;
-    const far = i === 1 || i === 3;
-    img.line(hx, hy, fx, fy, far ? FOX_DARK : FOX, 2);
-    img.rect(fx - 1 + (fx >= hx ? 0 : 0), fy + 1, 3, 1, OUTLINE);
-  });
-  // cauda
-  const t = p.tail;
+    const far = i === 0 || i === 2;
+    img.line(x0, y0, fx, fy, far ? hex('#3e1c08') : FOX_LEG, 2);
+    // pé começa na perna e avança 1 px para a frente (no sentido em que a raposa olha)
+    img.rect(Math.round(fx), Math.round(fy) + 1, 3, 1, far ? hex('#3e1c08') : FOX_LEG);
+  };
+  leg(0);
+  leg(2);
+
+  drawTail(img, [10 - st, 21 + b], p.tail);
+
+  // corpo: sombra embaixo, laranja, brilho no dorso
+  img.ellipse(15.5, 22.5 + b, 7.5 + st, 4.5, FOX_SHADE);
+  img.ellipse(15.5, 21.8 + b, 7.3 + st, 4, FOX_ORANGE);
+  img.rect(11 - st, 18 + b, 8 + st * 2, 1, FOX_LIGHT);
+  // peito branco subindo para o pescoço
+  img.ellipse(20.5 + st, 22 + b, 3, 3.6, FOX_WHITE);
+  img.rect(19 + st, 24 + b, 4, 1, FOX_WHITE_SHADE);
+
+  leg(1);
+  leg(3);
+
+  // cabeça grande
+  const cx = 21.5 + st + hx;
+  const cy = 13.5 + b + hy;
+  // orelhas (a de trás primeiro)
   img.poly(
     [
-      [9, 20 + b],
-      [3, 15 + b - t],
-      [1, 11 + b - t],
-      [5, 12 + b - t],
-      [10, 17 + b],
+      [cx - 5, cy - 2],
+      [cx - 4, cy - 9],
+      [cx - 1, cy - 4],
     ],
-    FOX,
-  );
-  img.ellipse(5, 16 + b - t, 4, 3, FOX);
-  img.ellipse(2.5, 12.5 + b - t, 2.2, 2.2, CREAM);
-  // corpo
-  img.ellipse(15, 21 + b, 7.5, 4.5, FOX);
-  img.ellipse(15, 23.5 + b, 5, 2, FOX_DARK);
-  img.ellipse(20, 22 + b, 3, 3, CREAM);
-  // cabeça
-  const hy = 14 + b;
-  img.poly(
-    [
-      [19, hy - 2],
-      [20, hy - 8],
-      [23, hy - 3],
-    ],
-    FOX,
-  );
-  img.poly(
-    [
-      [23, hy - 3],
-      [26, hy - 8],
-      [26, hy - 1],
-    ],
-    FOX,
-  );
-  img.set(21, hy - 5, FOX_DARK);
-  img.set(25, hy - 5, FOX_DARK);
-  img.ellipse(22.5, hy + 1, 4.5, 4, FOX);
-  img.poly(
-    [
-      [24, hy],
-      [30, hy + 2],
-      [29, hy + 3.5],
-      [23, hy + 4.5],
-    ],
-    FOX,
+    FOX_SHADE,
   );
   img.poly(
     [
-      [22, hy + 2.5],
-      [29, hy + 2.5],
-      [28, hy + 4],
-      [22, hy + 5],
+      [cx - 1, cy - 4],
+      [cx + 1, cy - 11],
+      [cx + 3.5, cy - 4],
     ],
-    CREAM,
+    FOX_ORANGE,
   );
-  img.set(29, hy + 2, OUTLINE);
-  img.set(30, hy + 2, OUTLINE);
+  img.poly(
+    [
+      [cx, cy - 5],
+      [cx + 1, cy - 9],
+      [cx + 2.2, cy - 5],
+    ],
+    FOX_WHITE,
+  );
+  img.ellipse(cx, cy, 5.6, 5, FOX_ORANGE);
+  img.rect(Math.round(cx - 4), Math.round(cy - 5), 6, 1, FOX_LIGHT);
+  // focinho: laranja em cima, branco embaixo, ponta escura
+  img.poly(
+    [
+      [cx + 3, cy - 1],
+      [cx + 8.5, cy + 1.5],
+      [cx + 8, cy + 3],
+      [cx + 3, cy + 4],
+    ],
+    FOX_ORANGE,
+  );
+  img.poly(
+    [
+      [cx - 1, cy + 2],
+      [cx + 8, cy + 2.3],
+      [cx + 7, cy + 3.6],
+      [cx + 1, cy + 5],
+      [cx - 2, cy + 4],
+    ],
+    FOX_WHITE,
+  );
+  img.rect(Math.round(cx + 7), Math.round(cy + 1), 2, 1, OUTLINE);
+  // olho grande e retangular (2×3); no dano, um "x"
+  const ex = Math.round(cx + 1);
+  const ey = Math.round(cy - 2);
   if (p.hurt) {
-    img.set(23, hy - 1, OUTLINE);
-    img.set(25, hy + 1, OUTLINE);
-    img.set(25, hy - 1, OUTLINE);
-    img.set(23, hy + 1, OUTLINE);
-    img.set(24, hy, OUTLINE);
+    img.set(ex - 1, ey, OUTLINE);
+    img.set(ex + 1, ey, OUTLINE);
+    img.set(ex, ey + 1, OUTLINE);
+    img.set(ex - 1, ey + 2, OUTLINE);
+    img.set(ex + 1, ey + 2, OUTLINE);
   } else {
-    img.rect(24, hy - 1, 1, 2, OUTLINE);
+    img.rect(ex, ey, 2, 3, OUTLINE);
   }
   img.outline(OUTLINE);
   return img;
 }
 
-const STAND: [number, number][] = [
+const STAND: [Pt, Pt, Pt, Pt] = [
   [0, 0],
   [0, 0],
   [0, 0],
   [0, 0],
 ];
 
-function genFox() {
-  const frames = [
-    fox({ bob: 0, legs: STAND, tail: 0 }), // 0 idle
-    fox({ bob: 1, legs: STAND.map(([x]) => [x, 0]) as [number, number][], tail: 1 }), // 1 idle respira
-    fox({ bob: 0, legs: [[-3, 0], [-1, -1], [3, 0], [1, -1]], tail: 0 }), // 2 corrida
-    fox({ bob: -1, legs: [[1, -2], [2, -1], [-1, -2], [-2, -1]], tail: 2 }), // 3
-    fox({ bob: 0, legs: [[-1, -1], [-3, 0], [1, -1], [3, 0]], tail: 1 }), // 4
-    fox({ bob: -1, legs: [[2, -1], [1, -2], [-2, -1], [-1, -2]], tail: 2 }), // 5
-    fox({ bob: -1, legs: [[3, -3], [2, -3], [4, -3], [3, -2]], tail: -1 }), // 6 pulo
-    fox({ bob: 0, legs: [[-3, 0], [-2, 0], [2, 0], [3, 0]], tail: 3 }), // 7 queda
-    fox({ bob: 1, legs: [[-2, 0], [2, 0], [-2, 0], [2, 0]], tail: -2, hurt: true }), // 8 dano
+// poses-chave da cauda parada (estilo da ref. 2): diagonal ↑, quase vertical, curvada no alto, reta para trás, caída com ponta curvada
+const TAIL_KEYS: TailPose[] = [
+  { ctrl: [5, 17], tip: [3, 9] },
+  { ctrl: [7, 13], tip: [7, 5] },
+  { ctrl: [5, 9], tip: [2, 13] },
+  { ctrl: [6.5, 20], tip: [4.5, 19.5] },
+  { ctrl: [3, 19], tip: [4, 27] },
+];
+
+/** Catmull-Rom fechada: passa por todas as poses-chave, sem quinas entre elas. */
+function catmull(p0: number, p1: number, p2: number, p3: number, t: number) {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return 0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3);
+}
+
+/** Ciclo fluido da cauda: n posições amostradas na curva fechada pelas poses-chave. */
+function tailLoop(keys: TailPose[], n: number): TailPose[] {
+  const k = keys.length;
+  const out: TailPose[] = [];
+  for (let i = 0; i < n; i++) {
+    const u = (i / n) * k;
+    const s = Math.floor(u);
+    const t = u - s;
+    const at = (j: number) => keys[(s + j + k) % k];
+    const lerp = (sel: (p: TailPose) => Pt): Pt => [
+      catmull(sel(at(-1))[0], sel(at(0))[0], sel(at(1))[0], sel(at(2))[0], t),
+      catmull(sel(at(-1))[1], sel(at(0))[1], sel(at(1))[1], sel(at(2))[1], t),
+    ];
+    out.push({ ctrl: lerp((p) => p.ctrl), tip: lerp((p) => p.tip) });
+  }
+  return out;
+}
+
+const TAIL_CYCLE = tailLoop(TAIL_KEYS, FOX_FRAMES.idle.length);
+
+function foxPoses(): Pose[] {
+  // parada: corpo e cabeça se movem juntos, guiados pela cauda: com a cauda no alto o corpo
+  // fica em cima; com a cauda baixa o peso puxa o quadril e o corpo abaixa até IDLE_DIP px
+  const IDLE_DIP = 2;
+  const tipYs = TAIL_CYCLE.map((t) => t.tip[1]);
+  const lo = Math.min(...tipYs);
+  const hi = Math.max(...tipYs);
+  const idle = TAIL_CYCLE.map((tail): Pose => {
+    const bob = Math.round((IDLE_DIP * (tail.tip[1] - lo)) / (hi - lo));
+    return { bob, legs: STAND, tail: { ctrl: [tail.ctrl[0], tail.ctrl[1] + bob], tip: [tail.tip[0], tail.tip[1] + bob] } };
+  });
+  // corrida: trote (diagonais em fase), corpo quica 2× por ciclo, cauda ondula com atraso
+  const run: Pose[] = Array.from({ length: FOX_FRAMES.run.length }, (_, i): Pose => {
+    const phi = (i / FOX_FRAMES.run.length) * Math.PI * 2;
+    const foot = (offset: number): Pt => {
+      const a2 = phi + offset;
+      // pé apoiado vai da frente para trás (empurra o chão); levantado, volta para a frente
+      return [Math.round(3 * Math.cos(a2)), -Math.round(Math.max(0, -Math.sin(a2)) * 2)];
+    };
+    const bob = -Math.round(0.5 - 0.5 * Math.cos(2 * phi));
+    const wave = Math.sin(phi - 0.9);
+    return {
+      bob,
+      legs: [foot(Math.PI), foot(0), foot(0), foot(Math.PI)],
+      tail: { ctrl: [5, 17.5 + wave * 1.5], tip: [2, 13 + wave * 3] },
+    };
+  });
+  const jump: Pose = { bob: -1, stretch: 1, legs: [[-4, -2], [-3, -2], [4, -3], [3, -2]], tail: { ctrl: [7.5, 19.5], tip: [5, 18.5] }, head: [-1, 1] };
+  const fall: Pose = { bob: 0, legs: [[-2, 0], [-1, 0], [2, 0], [1, 0]], tail: { ctrl: [6, 13], tip: [5, 6] } };
+  const land: Pose[] = [
+    { bob: 2, legs: [[-2, 0], [-1, 0], [1, 0], [2, 0]], tail: { ctrl: [6.5, 22], tip: [4.5, 21] }, head: [0, 1] },
+    { bob: 1, legs: STAND, tail: { ctrl: [5, 19], tip: [2, 16] } },
   ];
+  const hurt: Pose = { bob: 1, legs: [[-2, 0], [2, 0], [-2, 0], [2, 0]], tail: { ctrl: [4, 22], tip: [2, 26] }, hurt: true };
+
+  const byName: Record<keyof typeof FOX_FRAMES, Pose[]> = { idle, run, jump: [jump], fall: [fall], land, hurt: [hurt] };
+  const poses: Pose[] = new Array(FOX_FRAME_COUNT);
+  for (const [name, frames] of Object.entries(FOX_FRAMES) as [keyof typeof FOX_FRAMES, readonly number[]][]) {
+    frames.forEach((frame, i) => (poses[frame] = byName[name][i]));
+  }
+  return poses;
+}
+
+function genFox() {
+  const frames = foxPoses().map(foxFrame);
+  // nada do desenho pode encostar na borda do quadro: o contorno ficaria de fora (parte cortada)
+  const cut = frames.flatMap((img, i) => {
+    for (let k = 0; k < 32; k++)
+      for (const [x, y] of [[0, k], [31, k], [k, 0]] as Pt[]) {
+        const o = (y * 32 + x) * 4;
+        const isOutline = img.data[o] === OUTLINE[0] && img.data[o + 1] === OUTLINE[1] && img.data[o + 2] === OUTLINE[2];
+        if (img.data[o + 3] && !isOutline) return [i];
+      }
+    return [];
+  });
+  if (cut.length && !process.argv.includes("--no-check")) throw new Error(`raposa cortada na borda do quadro: ${cut.join(", ")}`);
   save('fox.png', sheet(frames));
+}
+
+/** Quadro "parado" usado no ícone do app. */
+function foxIconFrame() {
+  return foxFrame({ bob: 0, legs: STAND, tail: TAIL_CYCLE[0] });
 }
 
 // ---------- tileset (16x16, 7 colunas x 2 linhas, margem 1 e espaçamento 2) ----------
@@ -684,7 +822,7 @@ function scaledBlit(dst: Img, src: Img, dx: number, dy: number, scale: number) {
 }
 
 function genIcons(page: Img) {
-  const foxImg = fox({ bob: 0, legs: STAND, tail: 0 });
+  const foxImg = foxIconFrame();
   for (const size of [180, 192, 512]) {
     const icon = new Img(size, size);
     icon.rect(0, 0, size, size, hex('#1d1530'));

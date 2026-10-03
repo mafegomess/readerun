@@ -3,3 +3,6 @@ dist
 .vercel
 *.log
 .DS_Store
+
+# imagens de referência para a arte (não vão para o repositório nem para o deploy)
+referencias/

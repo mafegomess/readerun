@@ -34,7 +34,7 @@ async function start() {
     input: { activePointers: 4 },
     physics: {
       default: 'arcade',
-      arcade: { gravity: { x: 0, y: PHYSICS.gravity }, debug: false },
+      arcade: { gravity: { x: 0, y: PHYSICS.gravity }, fps: PHYSICS.stepsPerSecond, debug: false },
     },
     scene: [BootScene, MenuScene, GameScene, HudScene, RevealScene],
   });

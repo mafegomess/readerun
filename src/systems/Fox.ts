@@ -3,6 +3,8 @@ import { PHYSICS } from '../config.ts';
 import { sfx } from './audio.ts';
 import { touch } from './controls.ts';
 
+const ANIM_AIR_GRACE = 0.06;
+
 type Keys = Record<'left' | 'right' | 'a' | 'd' | 'up' | 'w' | 'space' | 'z', Phaser.Input.Keyboard.Key>;
 
 export class Fox extends Phaser.Physics.Arcade.Sprite {
@@ -12,7 +14,12 @@ export class Fox extends Phaser.Physics.Arcade.Sprite {
   private buffer = 0;
   private jumping = false;
   private touchJumpWas = false;
+  /** tempo sem chão, para a animação não piscar em frações de segundo no ar */
+  private airTime = 0;
+  private wasAnimGround = true;
   frozen = false;
+  /** apoiada numa plataforma móvel (marcado pela GameScene a cada passo de física) */
+  supported = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'fox', 0);
@@ -41,6 +48,9 @@ export class Fox extends Phaser.Physics.Arcade.Sprite {
     this.buffer = 0;
     this.coyote = 0;
     this.jumping = false;
+    this.airTime = 0;
+    this.wasAnimGround = true;
+    this.supported = false;
     this.touchJumpWas = touch.jump;
   }
 
@@ -60,7 +70,8 @@ export class Fox extends Phaser.Physics.Arcade.Sprite {
     const jumpPressed = JD(k.up) || JD(k.w) || JD(k.space) || JD(k.z) || (touch.jump && !this.touchJumpWas);
     this.touchJumpWas = touch.jump;
 
-    const onGround = this.body.blocked.down || this.body.touching.down;
+    const onGround = this.body.blocked.down || this.body.touching.down || this.supported;
+    this.airTime = onGround ? 0 : this.airTime + dt;
     this.coyote = onGround ? PHYSICS.coyoteTime : Math.max(0, this.coyote - dt);
     this.buffer = jumpPressed ? PHYSICS.jumpBuffer : Math.max(0, this.buffer - dt);
 
@@ -86,7 +97,27 @@ export class Fox extends Phaser.Physics.Arcade.Sprite {
     }
     if (this.body.velocity.y >= 0) this.jumping = false;
 
-    if (onGround) this.play(dir !== 0 ? 'fox-run' : 'fox-idle', true);
-    else this.play(this.body.velocity.y < 0 ? 'fox-jump' : 'fox-fall', true);
+    // a animação só considera "no ar" depois de ~60 ms sem chão (ou logo, se estiver subindo)
+    const rising = this.body.velocity.y < 0;
+    const animGround = onGround || (!rising && this.airTime < ANIM_AIR_GRACE);
+    const landed = animGround && !this.wasAnimGround;
+    this.wasAnimGround = animGround;
+    this.pickAnimation(animGround, rising, landed, dir);
+  }
+
+  /** Só escolhe a animação: o pouso nunca atrasa o controle (spec 003, RF-011). */
+  private pickAnimation(animGround: boolean, rising: boolean, landed: boolean, dir: number) {
+    if (!animGround) {
+      this.play(rising ? 'fox-jump' : 'fox-fall', true);
+      return;
+    }
+    if (dir !== 0) {
+      this.play('fox-run', true);
+      return;
+    }
+    const current = this.anims.currentAnim?.key;
+    const busy = this.anims.isPlaying && current === 'fox-land';
+    if (landed) this.play('fox-land');
+    else if (!busy && current !== 'fox-idle') this.play('fox-idle');
   }
 }

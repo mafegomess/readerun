@@ -47,7 +47,7 @@ Controles: setas/A-D para andar, espaço/W/Z/↑ para pular (segurar pula mais a
 
 ## Arte e som
 
-Toda a pixel art é gerada por código em `scripts/gen-assets.ts` (`npm run gen:assets` recria `public/assets/*.png`). Música e efeitos são sintetizados com Web Audio (`src/systems/audio.ts`). Para trocar por arte própria, basta substituir os PNGs mantendo tamanhos e quadros.
+Toda a pixel art é gerada por código em `scripts/gen-assets.ts` (`npm run gen:assets` recria `public/assets/*.png`; `-- --out <pasta>` gera em outro lugar, para prévias). A raposa tem 27 quadros (cauda balançando com o corpo acompanhando, trote, pulo, queda, pouso e dano), na ordem definida em `src/data/foxFrames.ts`, que também alimenta as animações do jogo. Música e efeitos são sintetizados com Web Audio (`src/systems/audio.ts`). Para trocar por arte própria, basta substituir os PNGs mantendo tamanhos e quadros.
 
 ## Deploy na Vercel
 
